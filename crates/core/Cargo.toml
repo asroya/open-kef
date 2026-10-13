@@ -1,0 +1,13 @@
+[package]
+name = "openkef-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+name = "openkef_core"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+ureq = { version = "2", default-features = false, features = ["json"] }

@@ -1,0 +1,12 @@
+[package]
+name = "openkef-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "openkef"
+path = "src/main.rs"
+
+[dependencies]
+openkef-core = { path = "../core" }
