@@ -66,10 +66,11 @@ I={ # icons (SF Symbol stand-ins)
 SOURCES=[('wifi','Wi-Fi'),('bluetooth','Bluetooth'),('tv','TV'),('optic','Optical'),('usb','USB')]
 TRACK=('Teardrop','Massive Attack')  # placeholder copy for the mockup, not live data
 STATES=[('playing','Playing',False),('paused','Paused',False),('offline','Speaker offline · provisional (MET-6)',True),('switching','Changing source · provisional (MET-6)',True)]
-def page(name,thesis,css,panel_fn):
+def page(name,thesis,css,panel_fn,states=None):
+    states=states or STATES
     out=f'<!doctype html><html lang="en"><!-- impeccable-disable tiny-text: tokens.json v0.2 rule "11pt label is allowed: macOS menu-bar scale" --><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>open-kef · MET-7 · {name}</title><style>{BASE}{css}</style></head><body>'
     out+=f'<p class="l mu" style="margin:0 0 var(--s1)">MET-7 · open-kef menu-bar panel</p><h1 class="t" style="margin:0 0 var(--s1)">{name}</h1><p class="b mu" style="margin:0 0 var(--s5);max-width:calc(var(--panelWidth) * 2)">{thesis}</p><div class="board">'
-    for sid,cap,prov in STATES:
+    for sid,cap,prov in states:
         out+=f'<figure class="state" id="{sid}" style="margin:0"><figcaption class="cap{" prov" if prov else ""}">{cap}</figcaption>{panel_fn(sid)}</figure>'
     return out+'</div></body></html>'
 
@@ -142,7 +143,8 @@ def B(sid):
 <div class="hr"></div><button class="row"{" disabled" if off else ""}><span class="ck">{I["power"]}</span>Standby<span class="kb">⌘S</span></button><button class="row"><span class="ck"></span>Open open-kef…<span class="kb">⌘O</span></button></div>'''
 
 # ---------- C: The ruler ----------
-C_CSS='''.ruler{position:relative;height:var(--s6);margin-top:var(--s5)}
+C_CSS='''.spinner{position:absolute;bottom:var(--s1);left:0;width:var(--s4);height:var(--s4);border-radius:var(--r-panel);border:var(--focus-w) solid var(--line);border-top-color:var(--textMuted)}
+.ruler{position:relative;height:var(--s6);margin-top:var(--s5)}
 .ruler .ticks{position:absolute;left:0;right:0;bottom:0;height:var(--s3);background:repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px var(--s1))}
 .ruler .ticks.maj{height:var(--s4);background:repeating-linear-gradient(90deg,var(--textMuted) 0 1px,transparent 1px calc(var(--s1) * 10))}
 .ruler .lvl{position:absolute;left:0;bottom:0;height:var(--s4);background:repeating-linear-gradient(90deg,var(--text) 0 1px,transparent 1px var(--s1))}
@@ -155,21 +157,23 @@ C_CSS='''.ruler{position:relative;height:var(--s6);margin-top:var(--s5)}
 .srcs button.pending{color:var(--text);text-decoration:underline dotted;text-underline-offset:var(--s1)}
 .big{display:flex;gap:var(--s3);align-items:center}'''
 def C(sid):
+    load=sid=='loading'; err=sid=='error'
     off=sid=='offline'; sw=sid=='switching'; c=cur(sid)
-    v=0 if off else VOL
-    title,sub=('Living Room is offline','Check power and Wi-Fi') if off else (('Switching to TV…','From Wi-Fi') if sw else TRACK)
-    btn='play' if sid in('paused','offline','switching') else 'pause'
-    dis=' disabled' if off or sw else ''
-    srcs=''.join(f'<button role="radio" aria-checked="{"true" if k==c and not sw and not off else "false"}" class="{"pending" if sw and k==c else ""}"{" disabled" if off else ""}>{n}</button>' for k,n in SOURCES)
+    v=0 if off or load else VOL
+    title,sub=('Living Room is offline','Check power and Wi-Fi') if off else (('Switching to TV…','From Wi-Fi') if sw else (('Connecting…','Living Room') if load else TRACK))
+    btn='play' if sid in('paused','offline','switching','loading') else 'pause'
+    dis=' disabled' if off or sw or load else ''
+    srcs=''.join(f'<button role="radio" aria-checked="{"true" if k==c and not sw and not off and not load else "false"}" class="{"pending" if sw and k==c else ""}"{" disabled" if off or load else ""}>{n}</button>' for k,n in SOURCES)
     return f'''<div class="panel" role="dialog" aria-label="open-kef">
 <div class="big"><div class="art" aria-hidden="true">{I["warn"] if off else I["note"]}</div><div class="ell" style="flex:1"><div class="t ell{" danger" if off else ""}">{title}</div><div class="b mu ell">{sub}</div></div><button class="hit" aria-label="{"Play" if btn=="play" else "Pause"}"{dis}>{I[btn]}</button></div>
-<div class="ruler" aria-hidden="false"><div class="ticks"></div><div class="ticks maj"></div>{"" if off else f'<div class="lvl" style="width:{v}%"></div><div class="cur" style="left:{v}%"><span class="n">{v}</span></div>'}<input type="range" min="0" max="100" value="{v}" aria-label="Volume"{" disabled" if off else ""}></div>
+<div class="ruler" aria-hidden="false"><div class="ticks"></div><div class="ticks maj"></div>{('<div class="cur" style="left:0;border:0"><span class="spinner" role="progressbar" aria-label="Loading volume"></span></div>' if load else ("" if off else f'<div class="lvl" style="width:{v}%"></div><div class="cur" style="left:{v}%"><span class="n">{v}</span></div>'))}<input type="range" min="0" max="100" value="{v}" aria-label="Volume"{" disabled" if off or load else ""}></div>
 <div class="srcs" role="radiogroup" aria-label="Source">{srcs}</div>
-<div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--s2)"><span class="l mu">Living Room · LSX II LT</span>{'<button class="hit l" style="width:auto;padding:0 var(--s2)">Retry</button>' if off else '<span class="l mu">'+('Switching…' if sw else '')+'</span>'}</div></div>'''
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--s2)">{'<span class="b danger" role="alert">Couldn’t set volume. Reverted.</span>' if err else '<span class="l mu">Living Room · LSX II LT</span>'}{'<button class="hit l" style="width:auto;padding:0 var(--s2)">Retry</button>' if off else '<span class="l mu">'+('Switching…' if sw else '')+'</span>'}</div></div>'''
 
 D=[('a-the-number.html','A · The number','Thesis: you open this panel to change loudness, so the volume figure is the interface. Signature: a 22pt tabular volume readout locked to the slider; everything else steps back.',A_CSS,A),
    ('b-the-menu.html','B · The menu','Thesis: a menu-bar extra should behave like a Mac menu, not a mini app. Signature: sources as real menu rows with a checkmark and ⌘1–⌘5, fully keyboard-drivable.',B_CSS,B),
    ('c-the-ruler.html','C · The ruler','Thesis: hi-fi gear is about precise level, so volume is drawn as a measuring ruler at the 4pt grid. Signature: a tick ruler (1 tick = 4pt, majors every 40pt) with the tabular level riding the cursor.',C_CSS,C)]
 for fn,name,th,css,fnc in D:
-    open(fn,'w').write(page(name,th,css,fnc))
+    st=STATES+[('loading','Loading',False),('error','Error · command failed',False)] if fnc is C else None
+    open(fn,'w').write(page(name,th,css,fnc,st))
 print('written')
