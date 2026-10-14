@@ -1,0 +1,64 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>open-kef · MET-7 · C · The ruler</title><style>:root{--bg:#FFFFFF;--surface:#F7F7F7;--text:#111111;--textMuted:#6B6B6B;--line:#E8E8E8;--accent:#111111;--danger:#C4321A;--s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:24px;--s6:32px;--r-control:6px;--r-panel:10px;--r-art:4px;--panelWidth:320px;--rowHeight:32px;--art:44px;--iconHit:28px;--slider:4px;--title-size:15px;--title-weight:600;--title-track:-0.2px;--title-lh:20px;--body-size:13px;--body-weight:400;--body-track:0px;--body-lh:18px;--label-size:11px;--label-weight:500;--label-track:0.2px;--label-lh:14px;--numeric-size:22px;--numeric-weight:600;--numeric-track:-0.4px;--numeric-lh:26px;--fast:120ms;--base:180ms;--ease:ease-out;}
+@media (prefers-color-scheme:dark){:root{--bg:#161616;--surface:#1E1E1E;--text:#F2F2F2;--textMuted:#9A9A9A;--line:#2C2C2C;--accent:#F2F2F2;--danger:#FF6B4F;}}
+*{box-sizing:border-box}
+html{-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--surface);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro",system-ui,sans-serif;color:var(--text);
+ font-size:var(--body-size);line-height:var(--body-lh);padding:var(--s6)}
+.board{display:flex;flex-wrap:wrap;gap:var(--s6);align-items:flex-start}
+.state{display:flex;flex-direction:column;gap:var(--s2)}
+.state>.cap{font-size:var(--label-size);font-weight:var(--label-weight);letter-spacing:var(--label-track);line-height:var(--label-lh);color:var(--textMuted)}
+.prov{color:var(--textMuted);font-style:italic}
+.panel{width:var(--panelWidth);background:var(--bg);border:1px solid var(--line);border-radius:var(--r-panel);padding:var(--s3);user-select:none;cursor:default}
+.t{font-size:var(--title-size);font-weight:var(--title-weight);letter-spacing:var(--title-track);line-height:var(--title-lh)}
+.b{font-size:var(--body-size);line-height:var(--body-lh)}
+.l{font-size:var(--label-size);font-weight:var(--label-weight);letter-spacing:var(--label-track);line-height:var(--label-lh)}
+.mu{color:var(--textMuted)}
+.n{font-size:var(--numeric-size);font-weight:var(--numeric-weight);letter-spacing:var(--numeric-track);line-height:var(--numeric-lh);font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+.tn{font-variant-numeric:tabular-nums}
+.danger{color:var(--danger)}
+.ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.art{width:var(--art);height:var(--art);border-radius:var(--r-art);background:var(--surface);border:1px solid var(--line);flex:none;display:grid;place-items:center;color:var(--textMuted)}
+.hit{width:var(--iconHit);height:var(--iconHit);border-radius:var(--r-control);display:grid;place-items:center;border:0;background:none;color:var(--text);padding:0;flex:none;cursor:default;font:inherit}
+.hit:hover{background:var(--surface)}
+.hit:focus-visible,.seg button:focus-visible,.row:focus-visible,input:focus-visible{outline:1px solid var(--accent);outline-offset:1px}
+.hit[disabled]{color:var(--textMuted)}
+svg.g{width:var(--s4);height:var(--s4);fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+svg.g.f{fill:currentColor;stroke:none}
+.slider{position:relative;height:var(--iconHit);display:flex;align-items:center}
+.slider .tr{position:relative;width:100%;height:var(--slider);border-radius:var(--r-control);background:var(--line)}
+.slider .fi{position:absolute;inset:0 auto 0 0;border-radius:var(--r-control);background:var(--accent)}
+.slider .th{position:absolute;top:50%;width:var(--s3);height:var(--s3);margin:calc(var(--s3) / -2) 0 0 calc(var(--s3) / -2);border-radius:var(--r-control);background:var(--bg);border:1px solid var(--textMuted)}
+.slider input{position:absolute;inset:0;width:100%;opacity:0;margin:0}
+.hr{height:1px;background:var(--line);margin:var(--s2) calc(var(--s3) * -1)}
+.spin{width:var(--s3);height:var(--s3);border-radius:var(--r-control);border:1px solid var(--line);border-top-color:var(--text);flex:none}
+@keyframes sp{to{transform:rotate(1turn)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}*{transition:none!important}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.ruler{position:relative;height:var(--s6);margin-top:var(--s5)}
+.ruler .ticks{position:absolute;left:0;right:0;bottom:0;height:var(--s3);background:repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px var(--s1))}
+.ruler .ticks.maj{height:var(--s4);background:repeating-linear-gradient(90deg,var(--textMuted) 0 1px,transparent 1px calc(var(--s1) * 10))}
+.ruler .lvl{position:absolute;left:0;bottom:0;height:var(--s4);background:repeating-linear-gradient(90deg,var(--text) 0 1px,transparent 1px var(--s1))}
+.ruler .cur{position:absolute;bottom:0;height:var(--s6);border-left:1px solid var(--text)}
+.ruler .cur span{position:absolute;bottom:var(--s5);left:var(--s1);}
+.ruler input{position:absolute;inset:0;width:100%;opacity:0;margin:0}
+.srcs{display:flex;flex-wrap:wrap;gap:0 var(--s3);margin-top:var(--s4)}
+.srcs button{border:0;background:none;padding:0;height:var(--iconHit);font:inherit;color:var(--textMuted);cursor:default}
+.srcs button[aria-checked=true]{color:var(--text);font-weight:var(--title-weight)}
+.srcs button.pending{color:var(--text);text-decoration:underline dotted;text-underline-offset:var(--s1)}
+.big{display:flex;gap:var(--s3);align-items:center}</style></head><body><p class="l mu" style="margin:0 0 var(--s1)">MET-7 · open-kef menu-bar panel</p><h1 class="t" style="margin:0 0 var(--s1)">C · The ruler</h1><p class="b mu" style="margin:0 0 var(--s5);max-width:calc(var(--panelWidth) * 2)">Thesis: hi-fi gear is about precise level, so volume is drawn as a measuring ruler at the 4pt grid. Signature: a tick ruler (1 tick = 4pt, majors every 40pt) with the tabular level riding the cursor.</p><div class="board"><figure class="state" id="playing" style="margin:0"><figcaption class="cap">Playing</figcaption><div class="panel" role="dialog" aria-label="open-kef">
+<div class="big"><div class="art" aria-hidden="true"><svg class="g" viewBox="0 0 16 16"><path d="M6 12V3.5l7-1.5v8.5"/><circle cx="4.5" cy="12" r="1.5"/><circle cx="11.5" cy="10.5" r="1.5"/></svg></div><div class="ell" style="flex:1"><div class="t ell">Teardrop</div><div class="b mu ell">Massive Attack</div></div><button class="hit" aria-label="Pause"><svg class="g f" viewBox="0 0 16 16"><rect x="4" y="3.5" width="3" height="9" rx="1"/><rect x="9" y="3.5" width="3" height="9" rx="1"/></svg></button></div>
+<div class="ruler" aria-hidden="false"><div class="ticks"></div><div class="ticks maj"></div><div class="lvl" style="width:40%"></div><div class="cur" style="left:40%"><span class="n">40</span></div><input type="range" min="0" max="100" value="40" aria-label="Volume"></div>
+<div class="srcs" role="radiogroup" aria-label="Source"><button role="radio" aria-checked="true" class="">Wi-Fi</button><button role="radio" aria-checked="false" class="">Bluetooth</button><button role="radio" aria-checked="false" class="">TV</button><button role="radio" aria-checked="false" class="">Optical</button><button role="radio" aria-checked="false" class="">USB</button></div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--s2)"><span class="l mu">Living Room · LSX II LT</span><span class="l mu"></span></div></div></figure><figure class="state" id="paused" style="margin:0"><figcaption class="cap">Paused</figcaption><div class="panel" role="dialog" aria-label="open-kef">
+<div class="big"><div class="art" aria-hidden="true"><svg class="g" viewBox="0 0 16 16"><path d="M6 12V3.5l7-1.5v8.5"/><circle cx="4.5" cy="12" r="1.5"/><circle cx="11.5" cy="10.5" r="1.5"/></svg></div><div class="ell" style="flex:1"><div class="t ell">Teardrop</div><div class="b mu ell">Massive Attack</div></div><button class="hit" aria-label="Play"><svg class="g f" viewBox="0 0 16 16"><path d="M5 3.5v9l7-4.5z"/></svg></button></div>
+<div class="ruler" aria-hidden="false"><div class="ticks"></div><div class="ticks maj"></div><div class="lvl" style="width:40%"></div><div class="cur" style="left:40%"><span class="n">40</span></div><input type="range" min="0" max="100" value="40" aria-label="Volume"></div>
+<div class="srcs" role="radiogroup" aria-label="Source"><button role="radio" aria-checked="true" class="">Wi-Fi</button><button role="radio" aria-checked="false" class="">Bluetooth</button><button role="radio" aria-checked="false" class="">TV</button><button role="radio" aria-checked="false" class="">Optical</button><button role="radio" aria-checked="false" class="">USB</button></div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--s2)"><span class="l mu">Living Room · LSX II LT</span><span class="l mu"></span></div></div></figure><figure class="state" id="offline" style="margin:0"><figcaption class="cap prov">Speaker offline · provisional (MET-6)</figcaption><div class="panel" role="dialog" aria-label="open-kef">
+<div class="big"><div class="art" aria-hidden="true"><svg class="g" viewBox="0 0 16 16"><path d="M8 2l6.5 11.5h-13z"/><path d="M8 6.5v3M8 11.6v.1"/></svg></div><div class="ell" style="flex:1"><div class="t ell danger">Living Room is offline</div><div class="b mu ell">Check power and Wi-Fi</div></div><button class="hit" aria-label="Play" disabled><svg class="g f" viewBox="0 0 16 16"><path d="M5 3.5v9l7-4.5z"/></svg></button></div>
+<div class="ruler" aria-hidden="false"><div class="ticks"></div><div class="ticks maj"></div><input type="range" min="0" max="100" value="0" aria-label="Volume" disabled></div>
+<div class="srcs" role="radiogroup" aria-label="Source"><button role="radio" aria-checked="false" class="" disabled>Wi-Fi</button><button role="radio" aria-checked="false" class="" disabled>Bluetooth</button><button role="radio" aria-checked="false" class="" disabled>TV</button><button role="radio" aria-checked="false" class="" disabled>Optical</button><button role="radio" aria-checked="false" class="" disabled>USB</button></div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--s2)"><span class="l mu">Living Room · LSX II LT</span><button class="hit l" style="width:auto;padding:0 var(--s2)">Retry</button></div></div></figure><figure class="state" id="switching" style="margin:0"><figcaption class="cap prov">Changing source · provisional (MET-6)</figcaption><div class="panel" role="dialog" aria-label="open-kef">
+<div class="big"><div class="art" aria-hidden="true"><svg class="g" viewBox="0 0 16 16"><path d="M6 12V3.5l7-1.5v8.5"/><circle cx="4.5" cy="12" r="1.5"/><circle cx="11.5" cy="10.5" r="1.5"/></svg></div><div class="ell" style="flex:1"><div class="t ell">Switching to TV…</div><div class="b mu ell">From Wi-Fi</div></div><button class="hit" aria-label="Play" disabled><svg class="g f" viewBox="0 0 16 16"><path d="M5 3.5v9l7-4.5z"/></svg></button></div>
+<div class="ruler" aria-hidden="false"><div class="ticks"></div><div class="ticks maj"></div><div class="lvl" style="width:40%"></div><div class="cur" style="left:40%"><span class="n">40</span></div><input type="range" min="0" max="100" value="40" aria-label="Volume"></div>
+<div class="srcs" role="radiogroup" aria-label="Source"><button role="radio" aria-checked="false" class="">Wi-Fi</button><button role="radio" aria-checked="false" class="">Bluetooth</button><button role="radio" aria-checked="false" class="pending">TV</button><button role="radio" aria-checked="false" class="">Optical</button><button role="radio" aria-checked="false" class="">USB</button></div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--s2)"><span class="l mu">Living Room · LSX II LT</span><span class="l mu">Switching…</span></div></div></figure></div></body></html>
