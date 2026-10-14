@@ -11,6 +11,7 @@ def cssvars():
     for k,x in T['size'].items(): v.append(f'--{k}:{x}px;')
     for k,t in T['type'].items():
         v.append(f'--{k}-size:{t["size"]}px;--{k}-weight:{t["weight"]};--{k}-track:{t["tracking"]}px;--{k}-lh:{t["lineHeight"]}px;')
+    v.append(f'--focus-w:{T["focus"]["width"]}px;--focus-o:{T["focus"]["offset"]}px;--o-disabled:{T["opacity"]["disabled"]};')
     v.append(f'--fast:{T["motion"]["fast"]}ms;--base:{T["motion"]["base"]}ms;--ease:ease-out;')
     return ':root{'+''.join(v)+'}\n@media (prefers-color-scheme:dark){:root{'+''.join(d)+'}}'
 BASE=cssvars()+'''
@@ -34,8 +35,8 @@ body{margin:0;background:var(--surface);font-family:-apple-system,BlinkMacSystem
 .art{width:var(--art);height:var(--art);border-radius:var(--r-art);background:var(--surface);border:1px solid var(--line);flex:none;display:grid;place-items:center;color:var(--textMuted)}
 .hit{width:var(--iconHit);height:var(--iconHit);border-radius:var(--r-control);display:grid;place-items:center;border:0;background:none;color:var(--text);padding:0;flex:none;cursor:default;font:inherit}
 .hit:hover{background:var(--surface)}
-.hit:focus-visible,.seg button:focus-visible,.row:focus-visible,input:focus-visible{outline:1px solid var(--accent);outline-offset:1px}
-.hit[disabled]{color:var(--textMuted)}
+.hit:focus-visible,.seg button:focus-visible,.row:focus-visible,input:focus-visible{outline:var(--focus-w) solid var(--accent);outline-offset:var(--focus-o)}
+.hit[disabled],button[disabled]{opacity:var(--o-disabled)}
 svg.g{width:var(--s4);height:var(--s4);fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 svg.g.f{fill:currentColor;stroke:none}
 .slider{position:relative;height:var(--iconHit);display:flex;align-items:center}
@@ -66,7 +67,7 @@ SOURCES=[('wifi','Wi-Fi'),('bluetooth','Bluetooth'),('tv','TV'),('optic','Optica
 TRACK=('Teardrop','Massive Attack')  # placeholder copy for the mockup, not live data
 STATES=[('playing','Playing',False),('paused','Paused',False),('offline','Speaker offline · provisional (MET-6)',True),('switching','Changing source · provisional (MET-6)',True)]
 def page(name,thesis,css,panel_fn):
-    out=f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>open-kef · MET-7 · {name}</title><style>{BASE}{css}</style></head><body>'
+    out=f'<!doctype html><html lang="en"><!-- impeccable-disable tiny-text: tokens.json v0.2 rule "11pt label is allowed: macOS menu-bar scale" --><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>open-kef · MET-7 · {name}</title><style>{BASE}{css}</style></head><body>'
     out+=f'<p class="l mu" style="margin:0 0 var(--s1)">MET-7 · open-kef menu-bar panel</p><h1 class="t" style="margin:0 0 var(--s1)">{name}</h1><p class="b mu" style="margin:0 0 var(--s5);max-width:calc(var(--panelWidth) * 2)">{thesis}</p><div class="board">'
     for sid,cap,prov in STATES:
         out+=f'<figure class="state" id="{sid}" style="margin:0"><figcaption class="cap{" prov" if prov else ""}">{cap}</figcaption>{panel_fn(sid)}</figure>'

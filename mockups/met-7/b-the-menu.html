@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>open-kef · MET-7 · B · The menu</title><style>:root{--bg:#FFFFFF;--surface:#F7F7F7;--text:#111111;--textMuted:#6B6B6B;--line:#E8E8E8;--accent:#111111;--danger:#C4321A;--s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:24px;--s6:32px;--r-control:6px;--r-panel:10px;--r-art:4px;--panelWidth:320px;--rowHeight:32px;--art:44px;--iconHit:28px;--slider:4px;--title-size:15px;--title-weight:600;--title-track:-0.2px;--title-lh:20px;--body-size:13px;--body-weight:400;--body-track:0px;--body-lh:18px;--label-size:11px;--label-weight:500;--label-track:0.2px;--label-lh:14px;--numeric-size:22px;--numeric-weight:600;--numeric-track:-0.4px;--numeric-lh:26px;--fast:120ms;--base:180ms;--ease:ease-out;}
+<!doctype html><html lang="en"><!-- impeccable-disable tiny-text: tokens.json v0.2 rule "11pt label is allowed: macOS menu-bar scale" --><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>open-kef · MET-7 · B · The menu</title><style>:root{--bg:#FFFFFF;--surface:#F7F7F7;--text:#111111;--textMuted:#6B6B6B;--line:#E8E8E8;--accent:#111111;--danger:#C4321A;--s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:24px;--s6:32px;--r-control:6px;--r-panel:10px;--r-art:4px;--panelWidth:320px;--rowHeight:32px;--art:44px;--iconHit:28px;--slider:4px;--title-size:15px;--title-weight:600;--title-track:-0.2px;--title-lh:20px;--body-size:13px;--body-weight:400;--body-track:0px;--body-lh:18px;--label-size:11px;--label-weight:500;--label-track:0.2px;--label-lh:14px;--numeric-size:22px;--numeric-weight:600;--numeric-track:-0.4px;--numeric-lh:26px;--focus-w:2px;--focus-o:1px;--o-disabled:0.4;--fast:120ms;--base:180ms;--ease:ease-out;}
 @media (prefers-color-scheme:dark){:root{--bg:#161616;--surface:#1E1E1E;--text:#F2F2F2;--textMuted:#9A9A9A;--line:#2C2C2C;--accent:#F2F2F2;--danger:#FF6B4F;}}
 *{box-sizing:border-box}
 html{-webkit-font-smoothing:antialiased}
@@ -20,8 +20,8 @@ body{margin:0;background:var(--surface);font-family:-apple-system,BlinkMacSystem
 .art{width:var(--art);height:var(--art);border-radius:var(--r-art);background:var(--surface);border:1px solid var(--line);flex:none;display:grid;place-items:center;color:var(--textMuted)}
 .hit{width:var(--iconHit);height:var(--iconHit);border-radius:var(--r-control);display:grid;place-items:center;border:0;background:none;color:var(--text);padding:0;flex:none;cursor:default;font:inherit}
 .hit:hover{background:var(--surface)}
-.hit:focus-visible,.seg button:focus-visible,.row:focus-visible,input:focus-visible{outline:1px solid var(--accent);outline-offset:1px}
-.hit[disabled]{color:var(--textMuted)}
+.hit:focus-visible,.seg button:focus-visible,.row:focus-visible,input:focus-visible{outline:var(--focus-w) solid var(--accent);outline-offset:var(--focus-o)}
+.hit[disabled],button[disabled]{opacity:var(--o-disabled)}
 svg.g{width:var(--s4);height:var(--s4);fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 svg.g.f{fill:currentColor;stroke:none}
 .slider{position:relative;height:var(--iconHit);display:flex;align-items:center}
