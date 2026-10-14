@@ -1,0 +1,10 @@
+[package]
+name = "open-kef-design-tokens"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Typed loader for design/tokens.json, the single source of design values"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
