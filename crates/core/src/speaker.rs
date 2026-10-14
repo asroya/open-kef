@@ -9,14 +9,14 @@ impl Source {
     pub fn as_str(self) -> &'static str {
         match self {
             Source::Standby => "standby", Source::Wifi => "wifi", Source::Bluetooth => "bluetooth",
-            Source::Tv => "tv", Source::Optic => "optic", Source::Coaxial => "coaxial",
+            Source::Tv => "tv", Source::Optic => "optical", Source::Coaxial => "coaxial",
             Source::Analog => "analog", Source::Usb => "usb",
         }
     }
     pub fn parse(s: &str) -> Option<Self> {
         Some(match s {
             "standby" => Self::Standby, "wifi" => Self::Wifi, "bluetooth" => Self::Bluetooth,
-            "tv" => Self::Tv, "optic" => Self::Optic, "coaxial" => Self::Coaxial,
+            "tv" => Self::Tv, "optical" | "optic" => Self::Optic, "coaxial" => Self::Coaxial,
             "analog" => Self::Analog, "usb" => Self::Usb, _ => return None,
         })
     }
@@ -84,8 +84,19 @@ mod tests {
     use super::*;
     #[test]
     fn source_roundtrip() {
-        for s in ["standby","wifi","bluetooth","tv","optic","coaxial","analog","usb"] {
+        for s in ["standby","wifi","bluetooth","tv","optical","coaxial","analog","usb"] {
             assert_eq!(Source::parse(s).unwrap().as_str(), s);
         }
+    }
+}
+
+#[cfg(test)]
+mod met6_tests {
+    use super::Source;
+    #[test]
+    fn optical_wire_name_matches_kef_connect() {
+        assert_eq!(Source::Optic.as_str(), "optical");
+        assert_eq!(Source::parse("optical"), Some(Source::Optic));
+        assert_eq!(Source::parse("optic"), Some(Source::Optic));
     }
 }
