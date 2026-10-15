@@ -4,7 +4,9 @@ import SwiftUI
 /// Mirrors openkef_core::SpeakerState (JSON over the C ABI).
 struct SpeakerState: Codable, Equatable {
     struct NowPlaying: Codable, Equatable {
+        struct Controls: Codable, Equatable { var next = false; var previous = false; var pause = false }
         var state = ""; var title = ""; var artist = ""; var album = ""; var artwork_url = ""
+        var controls = Controls()
     }
     var volume: Int = 0
     var muted = false
@@ -41,6 +43,9 @@ final class PanelModel: ObservableObject {
     private var client: SpeakerClient?
     private var volumeInFlight = false
     private var pendingVolume: Int?
+    private var playInFlight = false
+    /// Restarts Bonjour discovery when there is no speaker bound yet (set by the app).
+    var rediscover: (() -> Void)?
 
     init(client: SpeakerClient?) { self.client = client }
 
@@ -61,7 +66,10 @@ final class PanelModel: ObservableObject {
     func handle(_ ev: SpeakerClient.Event) {
         switch ev {
         case .state(let s):
-            if case .switching(let to, _) = phase, s.source != to { state = s; return }
+            if case .switching(let to, _) = phase {
+                // Hold the optimistic source until the speaker reports it (or the switch times out/fails).
+                guard s.source == to else { var t = s; t.source = to; state = t; return }
+            }
             state = s
             if pendingVolume == nil && !volumeInFlight { displayVolume = s.volume }
             phase = .ready
@@ -101,23 +109,42 @@ final class PanelModel: ObservableObject {
     }
 
     private func sourceDone(ok: Bool, id: String) {
-        if ok { error = nil; state.source = id } else { fail("Couldn’t switch source.") }
-        if case .switching = phase { phase = .ready }
-    }
-
-    func playPause() {
-        guard let client else { return }
-        Task.detached { [weak self] in
-            let ok = client.playPause()
-            await self?.playDone(ok: ok)
+        guard case .switching(let to, let from) = phase, to == id else { return }
+        if !ok { state.source = from; phase = .ready; fail("Couldn’t switch source."); return }
+        error = nil
+        state.source = id
+        // Stay in .switching until a poll confirms `id`; give up waiting after 5 s.
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 5_000_000_000)
+            guard let self, case .switching(let t, _) = self.phase, t == id else { return }
+            self.phase = .ready
         }
     }
 
-    private func playDone(ok: Bool) {
-        if ok { error = nil; state.now_playing.state = isPlaying ? "paused" : "playing" } else { fail("Couldn’t change playback.") }
+    func playPause() {
+        guard let client, !playInFlight else { return }
+        // Decide the target once, before the call, so a `state` event that lands first can't make us invert it again.
+        let from = state.now_playing.state
+        let target = isPlaying ? "paused" : "playing"
+        playInFlight = true
+        state.now_playing.state = target
+        Task.detached { [weak self] in
+            let ok = client.playPause()
+            await self?.playDone(ok: ok, from: from, target: target)
+        }
     }
 
-    func retry() { phase = .loading; client?.start() }
+    private func playDone(ok: Bool, from: String, target: String) {
+        playInFlight = false
+        if ok { error = nil; return }
+        if state.now_playing.state == target { state.now_playing.state = from }
+        fail("Couldn’t change playback.")
+    }
+
+    func retry() {
+        phase = .loading
+        if let client { client.start() } else { rediscover?() }
+    }
 
     private func fail(_ msg: String) {
         displayVolume = state.volume   // snap back to the last level the speaker reported
