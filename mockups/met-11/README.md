@@ -5,57 +5,58 @@
 - `board.png`: all eight crops, light on the top row and dark on the bottom.
 - Branched from `origin/met-9`, because `main` doesn't have the MET-9 and MET-10 commits yet.
 
-**Thesis:** the window is the panel grown up. One ruler sets the level, and everything else is text you read top to bottom: what's playing, how to play from this Mac, which input, which service.
+**Thesis:** the window is the panel grown up. One ruler sets the level, and everything else is text you read top to bottom: what's playing, one AirPlay button, which input, and how to play from other apps.
 **Signature:** direction C's volume ruler at full window width. It's the same spec as the panel: tick `ruler.tickWidth` every `space.1`, majors every `ruler.majorEvery`, with the tabular level riding the cursor.
 
-## States
+## States (revision 2, 15 Oct)
 | State | Notes |
 |---|---|
-| Playing · Spotify Connect | Now playing comes from `player:player/data` (title, artist, album). The "Spotify Connect" source line assumes the speaker reports the service (provisional). |
-| Mac audio over AirPlay · **provisional** | Switching the Mac's output from Swift is code bro's spike. The speaker side (Wi-Fi input, AirPlay 2) is confirmed in MET-6. |
-| Idle · no media | Transport is disabled. "Play Mac audio" stays available. |
+| Playing · Apple Music over AirPlay | The Mac or iPhone is playing to the KEF. Title and artist come from `player:player/data`. Whether AirPlay fills that metadata, and whether the speaker reports the sending device, is **provisional**, so the source line only says "AirPlay 2 · Wi-Fi". |
+| AirPlay from this Mac | The Mac's output is set to the KEF through the AirPlay picker. Whether play/pause and next/previous reach the Mac over AirPlay is **provisional**. |
+| Idle · no media | Transport is disabled. The AirPlay button stays available. |
 | Offline | Red only here: the status dot, the title and the art icon. Every control is at `opacity.disabled`. |
+
+**Single primary action:** the "AirPlay" button opens the system AirPlay picker (AVRoutePickerView on macOS). Nothing else in the window is filled.
+**Removed:** the Spotify, Tidal and Qobuz rows.
+
+**YouTube Music row:** a plain explanation with no button.
+- On the Mac: play it in Safari and use Safari's AirPlay button.
+- On a phone: use Cast in the YouTube Music app.
+- Google Cast is listed as **confirmed** in `docs/met-6-capabilities.md`: `settings:/googlecast/tosAccepted`, `googlecast:usageReport`, `googleCastLite`. That's from a static string audit of KEF Connect 1.31, not a live cast test, so a live cast from YouTube Music to our LT is still worth one check.
 
 ## Capabilities (from `docs/met-6-capabilities.md`)
 | Shown | MET-6 status |
 |---|---|
-| Inputs Wi-Fi, Bluetooth, TV, Optical, USB | `kefPhysicalSource` values confirmed. The LT's input list is inferred from its hardware (no coaxial or analog). |
+| Inputs Wi-Fi, Bluetooth, TV, Optical, USB | `kefPhysicalSource` values confirmed. The LT's input list is inferred from its hardware. |
 | Volume ruler, transport, now playing, connection status | Confirmed paths |
-| Spotify Connect | Confirmed (`ui:/spotify`, `spotifySupported`) |
-| Tidal Connect, Qobuz Connect | **Provisional.** KEF Connect 1.31 only has `ui:/airabletidal` and `ui:/airableqobuz` (Airable browsing), and "TIDAL Connect specifically not found". The cards only open each app and don't claim the speaker appears as a target. |
 | AirPlay 2 on the speaker | Confirmed (`settings:/airplay/*`) |
-
-The ticket asks for "cards", but `tokens.rules` says "never a card", so services are rows separated by 1pt lines.
+| Google Cast on the speaker | Confirmed strings (see above) |
 
 ## Score
 **Impeccable (v4.5.2):** 0 anti-patterns.
-- `tiny-text` is waived inline, citing the tokens rule that allows 11pt labels.
+- `tiny-text` is waived inline under the tokens rule that allows 11pt labels.
 - One advisory remains: `repeating-stripes-gradient` on the ruler. The ticks carry data.
-- An earlier pass had 32 findings: tight leading on wrapping 11pt labels, and cramped padding in the title bar. Both are fixed.
 
 **Rubric: 3/17, pass.**
 | Line | Score | Reason |
 |---|---|---|
-| 3 · Hairline default | 1 | Monochrome with 1pt lines, as the tokens prescribe |
+| 3 · Hairline default | 1 | |
 | 7 · Grid-like texture | 1 | The ruler ticks |
-| 15 · Small text | 1 | 13pt body with 11pt labels, at macOS scale |
+| 15 · Small text | 1 | macOS scale |
 | All others | 0 | |
 
-**Gates:** thesis yes; one signature yes; accessory cut yes (the long provisional explanations were cut to one line, and the details moved here).
+**Gates:** thesis yes; one signature (the ruler) yes; accessory cut yes (the duplicate AirPlay glyph in front of the AirPlay row; the button keeps its glyph).
 
-## Hostile critique → iteration
-1. **Offline icon colour:** the warning icon inherited the art slot's muted colour (the same bug Bugbot caught on the panel). It's now `danger`.
-2. **Offline placeholder:** removed a stray "—" source line.
-3. **AirPlay description:** it was truncated, so it's now one line that fits.
-4. **Provisional notes:** they wrapped to two italic lines, so they're now one line.
-5. **11pt wrapping:** labels that wrapped are now 13pt body text, which cleared the tight-leading findings.
+## Critique pass (revision 2)
+- Two AirPlay glyphs in one row competed with the single primary button, so the row glyph is removed.
+- With the services rows gone, the window is shorter and the ruler carries more of it.
 
 Still weak:
-- The window chrome is a drawn stand-in.
-- The art is only 44pt, the largest art token.
-- The ruler's tabular numeral is 22pt in a 640pt window.
+- The playing state can't say "Apple Music" or which device is sending unless the speaker reports it.
+- The YouTube Music guidance is plain text with no action, by design: there's no API to start a cast from the Mac.
 
 ## Token requests (for design snob bro)
+**Priority:** request 5 (primary button) matters more now that the AirPlay button is the window's single primary action.
 1. **Window width** (and a minimum). The mockup uses `size.panelWidth` × 2, which is a placeholder.
 2. **Large art size** for the window. Only `size.art` (44) exists.
 3. **Window chrome:** title-bar height and the traffic lights. These should be native NSWindow, but the HTML stand-in uses `size.rowHeight`, `space.3` and `radius.control`.
@@ -64,9 +65,10 @@ Still weak:
 6. **A display size larger than `type.numeric`**, if the ruler readout should scale up in the window.
 
 ## Open API questions (MET-6 follow-up)
-1. Does the LSX II LT appear as a Tidal Connect or Qobuz Connect target, or only through Airable browsing? Test from each app on the network.
-2. Does `player:player/data` report which service is playing (for example `serviceID` = `spotify` or `airplay`)? The source line depends on it.
+1. Live test: does YouTube Music Cast to our LSX II LT? Google Cast is only confirmed from KEF Connect strings.
+2. Does `player:player/data` report the service (`serviceID` = `airplay` or `googlecast`) and the sending device name?
 3. Does AirPlay playback fill `player:player/data` with title, artist and artwork, or is it empty?
-4. Does starting AirPlay or Spotify Connect switch `physicalSource` to `wifi` by itself, or must we set it first? The ticket assumes we set it.
-5. From the Mac side: can Swift set the system audio output to an AirPlay 2 receiver without user interaction (code bro's spike)?
+4. Does starting AirPlay or Google Cast switch `physicalSource` to `wifi` by itself, or must we set it first? The ticket assumes we set it.
+5. Mac side: AVRoutePickerView shows the system picker. Does it list the KEF reliably, and can we preselect or highlight it?
+7. Do play/pause and next/previous via `player:player/control` reach the AirPlay sender (Mac or iPhone)?
 6. Is there a confirmed "full quality" or format readout (`imx8af:decoderInfoCodecString`) worth showing per service?
