@@ -21,7 +21,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 <plist version="1.0">
 <dict>
   <key>CFBundleName</key><string>OpenKef</string>
-  <key>CFBundleDisplayName</key><string>open-kef</string>
+  <key>CFBundleDisplayName</key><string>OpenKef</string>
   <key>CFBundleIdentifier</key><string>$BUNDLE_ID</string>
   <key>CFBundleExecutable</key><string>OpenKef</string>
   <key>CFBundlePackageType</key><string>APPL</string>
@@ -30,7 +30,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>LSMinimumSystemVersion</key><string>14.0</string>
   <key>LSUIElement</key><true/>
-  <key>NSLocalNetworkUsageDescription</key><string>open-kef finds and controls your KEF speakers on your local network.</string>
+  <key>NSLocalNetworkUsageDescription</key><string>OpenKef finds and controls your KEF speakers on your local network.</string>
   <key>NSBonjourServices</key><array><string>_kef-info._tcp</string></array>
 </dict>
 </plist>
