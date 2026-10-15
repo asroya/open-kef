@@ -128,7 +128,7 @@ struct PanelView: View {
                         .font(.system(size: T.TypeScale.body.size, weight: active ? T.TypeScale.title.weight : T.TypeScale.body.weight))
                         .tracking(T.TypeScale.body.tracking)
                         .foregroundStyle(active || pending ? p.text : p.textMuted)
-                        .underline(pending, pattern: .dot)
+                        .underline(pending, pattern: .dot, color: T.Pending.color(p))
                         .frame(height: T.Size.iconHit)
                         .contentShape(Rectangle())
                 }
@@ -186,14 +186,14 @@ struct RulerView: View {
                     let n = Int(size.width / T.Space.s1)
                     for i in 0...n {
                         let tx = CGFloat(i) * T.Space.s1
-                        let major = i % 10 == 0
+                        let major = i % T.Ruler.majorEvery == 0
                         let lit = showLevel && tx < x
                         let h = (lit || major) ? T.Space.s4 : T.Space.s3
-                        let c = lit ? p.text : (major ? p.textMuted : p.line)
-                        ctx.fill(Path(CGRect(x: tx, y: size.height - h, width: 1, height: h)), with: .color(c))
+                        let c = lit ? T.Ruler.filled(p) : (major ? T.Ruler.major(p) : T.Ruler.minor(p))
+                        ctx.fill(Path(CGRect(x: tx, y: size.height - h, width: T.Ruler.tickWidth, height: h)), with: .color(c))
                     }
                     if showLevel {
-                        ctx.fill(Path(CGRect(x: min(x, size.width - 1), y: 0, width: 1, height: size.height)), with: .color(p.text))
+                        ctx.fill(Path(CGRect(x: min(x, size.width - T.Ruler.tickWidth), y: 0, width: T.Ruler.tickWidth, height: size.height)), with: .color(T.Ruler.filled(p)))
                     }
                 }
                 if showLevel {

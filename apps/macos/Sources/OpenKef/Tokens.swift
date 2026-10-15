@@ -50,6 +50,17 @@ enum T {
     enum Focus {
         static let width: CGFloat = 2  // HTML mockups + snapshot spinner stand-in only
     }
+    enum Ruler {
+        static let tickWidth: CGFloat = 1
+        static let majorEvery = 10
+        static func filled(_ p: Palette) -> Color { p.text }
+        static func minor(_ p: Palette) -> Color { p.line }
+        static func major(_ p: Palette) -> Color { p.textMuted }
+    }
+    enum Pending {
+        static let width: CGFloat = 1
+        static func color(_ p: Palette) -> Color { p.textMuted }
+    }
     enum Opacity {
         static let disabled: Double = 0.4
     }

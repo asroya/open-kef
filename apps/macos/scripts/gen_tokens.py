@@ -29,6 +29,15 @@ group('Space', T['space'], 's'); group('Radius', T['radius']); group('Size', T['
 L.append('    enum Icon {'); L.append(f'        static let size: CGFloat = {T["icon"]["size"]}')
 L.append(f'        static let weight: Font.Weight = .{T["icon"]["weight"]}'); L.append('    }')
 L.append('    enum Focus {'); L.append(f'        static let width: CGFloat = {T["focus"]["width"]}  // HTML mockups + snapshot spinner stand-in only'); L.append('    }')
+r = T['ruler']; pd = T['pending']
+def role(ref): return ref.split('.')[-1]  # "color.*.text" -> palette key
+assert pd['underline'] == 'dotted', 'add a mapping for new underline patterns'
+L += ['    enum Ruler {', f'        static let tickWidth: CGFloat = {r["tickWidth"]}', f'        static let majorEvery = {r["majorEvery"]}',
+      f'        static func filled(_ p: Palette) -> Color {{ p.{role(r["tickFilled"])} }}',
+      f'        static func minor(_ p: Palette) -> Color {{ p.{role(r["tickMinor"])} }}',
+      f'        static func major(_ p: Palette) -> Color {{ p.{role(r["tickMajor"])} }}', '    }',
+      '    enum Pending {', f'        static let width: CGFloat = {pd["width"]}',
+      f'        static func color(_ p: Palette) -> Color {{ p.{role(pd["color"])} }}', '    }']
 L.append('    enum Opacity {'); L.append(f'        static let disabled: Double = {T["opacity"]["disabled"]}'); L.append('    }')
 m = T['motion']
 assert m['easing'] == 'easeOut', 'add a mapping for new easing values'
