@@ -1,4 +1,4 @@
-# MET-11 Now Playing window mockup. CSS values come from design/tokens.json (v0.3.1) via var(--*),
+# MET-11 Now Playing window mockup. CSS values come from design/tokens.json (v0.4) via var(--*),
 # except 0, 1pt hairlines (tokens.rules) and percentages for data (volume level).
 # Window chrome (title bar, traffic lights) is a stand-in for the native NSWindow; see README token requests.
 import json, pathlib
@@ -13,6 +13,16 @@ def cssvars():
     for k, t in T['type'].items():
         v.append(f'--{k}-size:{t["size"]}px;--{k}-weight:{t["weight"]};--{k}-track:{t["tracking"]}px;--{k}-lh:{t["lineHeight"]}px;')
     v.append(f'--focus-w:{T["focus"]["width"]}px;--focus-o:{T["focus"]["offset"]}px;--o-disabled:{T["opacity"]["disabled"]};--icon:{T["icon"]["size"]}px;--tick:{T["ruler"]["tickWidth"]}px;')
+    v += [f'--window-{k}:{x}px;' for k, x in T['window'].items()]
+    def resolve(ref):
+        cur = T
+        for part in ref.split('.'):
+            cur = cur[part]
+        return cur
+    bp = T['button']['primary']
+    v.append(f'--status-dot:{T["status"]["dot"]}px;')
+    v.append(f'--btn-primary-h:{resolve(bp["height"])}px;--btn-primary-px:{resolve(bp["paddingX"])}px;--btn-primary-r:{resolve(bp["radius"])}px;')
+    v.append(f'--btn-primary-weight:{bp["labelWeight"]};')
     return ':root{' + ''.join(v) + '}', ':root{' + ''.join(d) + '}'
 LIGHT, DARK = cssvars()
 CSS = LIGHT + '\n.dark{' + DARK[6:] + '\n' + '''
@@ -27,19 +37,19 @@ figcaption{font-size:var(--label-size);font-weight:var(--label-weight);letter-sp
 .n{font-size:var(--numeric-size);font-weight:var(--numeric-weight);letter-spacing:var(--numeric-track);line-height:var(--numeric-lh);font-variant-numeric:tabular-nums}
 .mu{color:var(--textMuted)}.danger{color:var(--danger)}
 .ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.win{width:calc(var(--panelWidth) * 2);background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:var(--r-panel);overflow:hidden}
+.win{width:var(--window-width);min-width:var(--window-minWidth);background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:var(--r-panel);overflow:hidden}
 .bar{height:var(--rowHeight);display:flex;align-items:center;gap:var(--s2);padding:var(--s1) var(--s3);border-bottom:1px solid var(--line);background:var(--surface)}
 .lights{display:flex;gap:var(--s2)}.lights i{width:var(--s3);height:var(--s3);border-radius:var(--r-control);border:1px solid var(--line);background:var(--bg)}
 .bar .ttl{flex:1;text-align:center}
 .status{display:flex;align-items:center;gap:var(--s1)}
-.dot{width:var(--s2);height:var(--s2);border-radius:var(--r-control);background:var(--text)}
+.dot{width:var(--status-dot);height:var(--status-dot);border-radius:50%;background:var(--text)}
 .dot.off{background:var(--danger)}
 .body{padding:var(--s5) var(--s5) var(--s4)}
 section{padding:var(--s4) 0;border-top:1px solid var(--line)}
 section:first-child{border-top:0;padding-top:0}
 .sh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:var(--s2)}
 .np{display:flex;gap:var(--s4);align-items:center}
-.art{width:var(--art);height:var(--art);border-radius:var(--r-art);background:var(--surface);border:1px solid var(--line);display:grid;place-items:center;color:var(--textMuted);flex:none}
+.art{width:var(--artLarge);height:var(--artLarge);border-radius:var(--r-art);background:var(--surface);border:1px solid var(--line);display:grid;place-items:center;color:var(--textMuted);flex:none}
 .hit{width:var(--iconHit);height:var(--iconHit);border-radius:var(--r-control);display:grid;place-items:center;border:0;background:none;color:var(--text);padding:0;flex:none;font:inherit;cursor:default}
 .hit:hover{background:var(--surface)}
 button[disabled]{opacity:var(--o-disabled)}
@@ -53,7 +63,7 @@ svg.g.f{fill:currentColor;stroke:none}
 .ruler .cur{position:absolute;bottom:0;height:var(--s6);border-left:var(--tick) solid var(--text)}
 .ruler .cur span{position:absolute;bottom:var(--s5);left:var(--s1)}
 .ruler input{position:absolute;inset:0;width:100%;opacity:0;margin:0}
-.btn{height:var(--rowHeight);padding:0 var(--s3);border-radius:var(--r-control);border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit;font-weight:var(--title-weight);display:inline-flex;align-items:center;gap:var(--s2);cursor:default;flex:none}
+.btn{height:var(--btn-primary-h);padding:0 var(--btn-primary-px);border-radius:var(--btn-primary-r);border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit;font-size:var(--body-size);font-weight:var(--btn-primary-weight);line-height:var(--body-lh);display:inline-flex;align-items:center;gap:var(--s2);cursor:default;flex:none}
 .btn.primary{background:var(--accent);color:var(--bg);border-color:var(--accent)}
 .row{display:flex;align-items:center;gap:var(--s3);min-height:var(--rowHeight)}
 .srcs{display:flex;flex-wrap:wrap;gap:0 var(--s4)}
@@ -84,7 +94,7 @@ def window(sid):
     src = 'wifi'
     if ap: art, title, sub, via = I['note'], 'Teardrop', 'Massive Attack · Mezzanine', 'AirPlay 2 · Wi-Fi'
     elif mac: art, title, sub, via = I['airplay'], 'This Mac', 'System audio', 'AirPlay 2 from this Mac · Wi-Fi'
-    elif idle: art, title, sub, via = I['note'], 'Nothing playing', 'Choose this speaker in AirPlay to start', 'Wi-Fi'
+    elif idle: art, title, sub, via = I['note'], 'Nothing playing', 'Living Room · Wi-Fi', 'Wi-Fi'
     else: art, title, sub, via = I['warn'], 'Living Room is offline', 'Check that the speaker is on and on this network', ''
     playing = ap or mac
     dis = ' disabled' if off or idle else ''
@@ -102,11 +112,12 @@ def window(sid):
            '<div class="mu">On your phone: tap Cast in the YouTube Music app and choose Living Room (Google Cast).</div></div></div>')
     btn = 'pause' if playing else 'play'
     viahtml = '' if off else f'<div class="l mu ell">{via}</div>'
+    subhtml = f'<div class="mu ell">{sub}</div>' if sub else ''
     return f'''<div class="win" role="dialog" aria-label="OpenKef">
 <div class="bar"><div class="lights" aria-hidden="true"><i></i><i></i><i></i></div><span class="ttl l">OpenKef</span>{status}</div>
 <div class="body">
 <section aria-label="Now playing"><div class="np"><div class="art{" danger" if off else ""}" aria-hidden="true">{art}</div>
-<div class="ell" style="flex:1"><div class="t ell{" danger" if off else (" mu" if idle else "")}">{title}</div><div class="mu ell">{sub}</div>{viahtml}</div>
+<div class="ell" style="flex:1"><div class="t ell{" danger" if off else (" mu" if idle else "")}">{title}</div>{subhtml}{viahtml}</div>
 <button class="hit" aria-label="Previous"{dis}>{I["prev"]}</button><button class="hit" aria-label="{btn.title()}"{dis}>{I[btn]}</button><button class="hit" aria-label="Next"{dis}>{I["next"]}</button></div>
 <div class="ruler"><div class="ticks"></div><div class="ticks maj"></div>{ruler}<input type="range" min="0" max="100" value="{0 if off else VOL}" aria-label="Volume"{" disabled" if off else ""}></div></section>
 <section aria-label="AirPlay">{airplay}</section>
