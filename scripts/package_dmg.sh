@@ -52,13 +52,23 @@ mkdir -p "$STAGE/.background"
 tiffutil -cathidpicheck "$BG/dmg-background.png" "$BG/dmg-background@2x.png" -out "$STAGE/.background/background.tiff" >/dev/null
 rm -f "$RW"
 hdiutil create -quiet -volname "$VOL" -srcfolder "$STAGE" -fs HFS+ -format UDRW -ov "$RW"
-MNT=$(hdiutil attach -readwrite -noverify -noautoopen "$RW" | sed -n 's|^/dev/[^ ]*[[:space:]]*Apple_HFS[[:space:]]*||p' | tail -1)
-[ -d "$MNT" ] || { echo "attach failed" >&2; exit 1; }
+# Unique mountpoint: never /Volumes/<name>, which collides with an already-mounted "OpenKef x.y.z".
+MNT=$(mktemp -d "${TMPDIR:-/tmp}/openkef-dmg.XXXXXX")
+cleanup() { if mount | grep -q " on $MNT "; then hdiutil detach -force -quiet "$MNT" || true; fi; rmdir "$MNT" 2>/dev/null || true; }
+trap cleanup EXIT INT TERM
+hdiutil attach -quiet -readwrite -noverify -noautoopen -nobrowse -mountpoint "$MNT" "$RW"
+[ -d "$MNT/OpenKef.app" ] || { echo "attach failed" >&2; exit 1; }
 # Finder needs the GUI session; SKIP_FINDER=1 builds an unstyled dmg instead.
 if [ "${SKIP_FINDER:-0}" != 1 ]; then
 osascript <<OSA
+set f to POSIX file "$MNT" as alias
 tell application "Finder"
-  tell disk "$VOL"
+  -- Finder may not see a fresh mount yet: wait up to ~10 s.
+  repeat 20 times
+    if exists folder f then exit repeat
+    delay 0.5
+  end repeat
+  tell folder f
     open
     set w to container window
     set current view of w to icon view
@@ -82,6 +92,7 @@ fi
 chmod -Rf go-w "$MNT" || true
 sync
 hdiutil detach -quiet "$MNT" || { sleep 2; hdiutil detach -force -quiet "$MNT"; }
+rmdir "$MNT" 2>/dev/null || true
 hdiutil convert -quiet "$RW" -format UDZO -imagekey zlib-level=9 -ov -o "$DMG"
 rm -rf "$STAGE" "$RW"
 echo "dmg: $DMG"
