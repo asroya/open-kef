@@ -52,3 +52,30 @@ enum Snapshot {
         }
     }
 }
+
+/// `--snapshot-window <dir>`: MET-11 window states (playing, mac, idle, offline), light + dark, 2x.
+enum WindowSnapshot {
+    static let states = ["playing", "mac", "idle", "offline"]
+    @MainActor static func run(to dir: URL) {
+        _ = NSApplication.shared
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        for scheme in [ColorScheme.light, .dark] {
+            for name in states {
+                let m = Mock.model(name == "offline" ? "offline" : "playing")
+                let route = WindowModel()
+                switch name {
+                case "mac": route.macIsAirPlaying = true; m.state.now_playing = .init(state: "playing"); m.state.now_playing.controls = .init(next: true, previous: true, pause: true)
+                case "idle": m.state.now_playing = .init(state: "stopped")
+                default: break
+                }
+                let view = NowPlayingWindow(model: m, route: route, music: MusicNowPlayingModel(), snapshot: true)
+                    .environment(\.colorScheme, scheme)
+                let r = ImageRenderer(content: view); r.scale = 2
+                guard let cg = r.cgImage else { print("render failed: \(name)"); continue }
+                let file = dir.appendingPathComponent("window--\(name)--\(scheme == .dark ? "dark" : "light").png")
+                try? NSBitmapImageRep(cgImage: cg).representation(using: .png, properties: [:])?.write(to: file)
+                print("wrote \(file.path)")
+            }
+        }
+    }
+}

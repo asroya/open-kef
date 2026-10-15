@@ -142,6 +142,17 @@ final class PanelModel: ObservableObject {
         fail("Couldn’t change playback.")
     }
 
+    /// Skip track. Only sent when the speaker reports the control as available.
+    func skip(forward: Bool) {
+        guard let client, phase == .ready else { return }
+        let c = state.now_playing.controls
+        guard forward ? c.next : c.previous else { return }
+        Task.detached { [weak self] in
+            let ok = forward ? client.next() : client.previous()
+            if !ok { await self?.fail("Couldn’t skip track.") }
+        }
+    }
+
     func retry() {
         phase = .loading
         if let client { client.start() } else { rediscover?() }

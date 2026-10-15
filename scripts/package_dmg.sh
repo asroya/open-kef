@@ -31,6 +31,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>LSMinimumSystemVersion</key><string>14.0</string>
   <key>LSUIElement</key><true/>
   <key>NSLocalNetworkUsageDescription</key><string>OpenKef finds and controls your KEF speakers on your local network.</string>
+  <key>NSAppleEventsUsageDescription</key><string>OpenKef reads what's playing in Music to show it in the panel.</string>
   <key>NSBonjourServices</key><array><string>_kef-info._tcp</string></array>
 </dict>
 </plist>

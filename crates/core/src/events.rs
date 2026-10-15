@@ -28,8 +28,8 @@ pub fn run(sp: Arc<Speaker>, stop: Arc<AtomicBool>, mut emit: impl FnMut(Event))
     let mut fails = 0u32;
     let mut offline = false;
     while !stop.load(Ordering::Relaxed) {
-        let q = match sp.subscribe().and_then(|q| sp.state().map(|s| (q, s))) {
-            Ok((q, s)) => { fails = 0; offline = false; emit(Event::State(s)); q }
+        let (q, mut cur) = match sp.subscribe().and_then(|q| sp.state().map(|s| (q, s))) {
+            Ok((q, s)) => { fails = 0; offline = false; emit(Event::State(s.clone())); (q, s) }
             Err(e) => {
                 if !offline { emit(Event::Offline(e.to_string())); offline = true; }
                 nap(backoff(fails), &stop); fails += 1; continue;
@@ -38,10 +38,14 @@ pub fn run(sp: Arc<Speaker>, stop: Arc<AtomicBool>, mut emit: impl FnMut(Event))
         while !stop.load(Ordering::Relaxed) {
             match sp.poll(&q, POLL_TIMEOUT_S) {
                 Ok(ev) if ev.is_empty() => {}
-                Ok(_) => match sp.state() {
-                    Ok(s) => emit(Event::State(s)),
-                    Err(_) => break,
-                },
+                // Apply event values directly (e.g. the new source's own volume after a switch);
+                // refetch the full state only if an item isn't one we model.
+                Ok(items) => {
+                    let mut all = true;
+                    for it in &items { all &= cur.apply_event(it); }
+                    if !all { match sp.state() { Ok(s) => cur = s, Err(_) => break } }
+                    emit(Event::State(cur.clone()));
+                }
                 // Lost subscription or unreachable: resubscribe (offline is emitted if that fails).
                 Err(_) => break,
             }

@@ -40,6 +40,7 @@ struct PanelView: View {
     /// Snapshot mode draws the mockup's `color.bg` + 1pt `color.line` edge instead of the live system material.
     var snapshot = false
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.openWindow) private var openWindow
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var p: T.Palette { scheme == .dark ? T.dark : T.light }
@@ -56,6 +57,16 @@ struct PanelView: View {
             RulerView(volume: model.displayVolume, showLevel: !offline && !loading, loading: loading,
                       enabled: !offline && !loading, snapshot: snapshot, set: model.setVolume)
                 .padding(.top, T.Space.s5)
+            if !snapshot {
+                Button { openWindow(id: "now-playing") } label: {
+                    Text("Now Playing").typeStyle(T.TypeScale.label).foregroundStyle(p.textMuted)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .frame(height: T.Size.iconHit).contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Now Playing")
+                .accessibilityHint("Opens the Now Playing window")
+            }
             sources.padding(.top, T.Space.s4)
             footer.padding(.top, T.Space.s2)
         }
@@ -175,6 +186,9 @@ struct RulerView: View {
     let loading: Bool
     let enabled: Bool
     var snapshot = false
+    /// Keep the ticks inside the ruler's own frame (the readout overflows upward). The MET-8 panel
+    /// was signed off with the old top-aligned layout, so it stays opt-in (MET-11 window uses it).
+    var pinBottom = false
     let set: (Int) -> Void
     @Environment(\.palette) private var p
     @FocusState private var focused: Bool
@@ -184,40 +198,13 @@ struct RulerView: View {
             let w = geo.size.width
             let x = (CGFloat(volume) / 100 * w).rounded()
             ZStack(alignment: .bottomLeading) {
-                Canvas { ctx, size in
-                    let n = Int(size.width / T.Space.s1)
-                    for i in 0...n {
-                        let tx = CGFloat(i) * T.Space.s1
-                        let major = i % T.Ruler.majorEvery == 0
-                        let lit = showLevel && tx < x
-                        let h = (lit || major) ? T.Space.s4 : T.Space.s3
-                        let c = lit ? T.Ruler.filled(p) : (major ? T.Ruler.major(p) : T.Ruler.minor(p))
-                        ctx.fill(Path(CGRect(x: tx, y: size.height - h, width: T.Ruler.tickWidth, height: h)), with: .color(c))
-                    }
-                    if showLevel {
-                        ctx.fill(Path(CGRect(x: min(x, size.width - T.Ruler.tickWidth), y: 0, width: T.Ruler.tickWidth, height: size.height)), with: .color(T.Ruler.filled(p)))
-                    }
-                }
-                if showLevel {
-                    let right = x + T.Space.s1 + T.TypeScale.numeric.size * 1.6 > w
-                    Text("\(volume)").typeStyle(T.TypeScale.numeric).foregroundStyle(p.text)
-                        .fixedSize()
-                        .alignmentGuide(.leading) { d in right ? d.width + T.Space.s1 - x : -(x + T.Space.s1) }
-                        .alignmentGuide(.bottom) { d in d[.bottom] + T.Space.s5 }
-                } else if loading && snapshot {
-                    // ImageRenderer can't draw ProgressView; use the mockup's static stand-in ring.
-                    ZStack {
-                        Circle().stroke(p.line, lineWidth: T.Focus.width)
-                        Circle().trim(from: 0, to: 0.25).stroke(p.textMuted, lineWidth: T.Focus.width).rotationEffect(.degrees(-45))
-                    }
-                    .frame(width: T.Space.s4, height: T.Space.s4)
-                    // Sits in the readout's spot above the ruler, matching the mockup.
-                    .alignmentGuide(.leading) { _ in -T.Space.s1 }
-                    .alignmentGuide(.bottom) { d in d[.bottom] + T.Space.s5 }
-                } else if loading {
-                    ProgressView().controlSize(.small)
-                        .alignmentGuide(.leading) { _ in -T.Space.s1 }
-                        .alignmentGuide(.bottom) { d in d[.bottom] + T.Space.s5 }
+                if pinBottom {
+                    // Readout as an overlay: the ticks stay inside the ruler frame (MET-11 window).
+                    ticks(x: x).frame(width: w, height: geo.size.height)
+                        .overlay { ZStack(alignment: .bottomLeading) { Color.clear; readout(x: x, w: w) } }
+                } else {
+                    ticks(x: x)
+                    readout(x: x, w: w)
                 }
             }
             .contentShape(Rectangle())
@@ -242,6 +229,47 @@ struct RulerView: View {
         }
     }
 
+    private func ticks(x: CGFloat) -> some View {
+        Canvas { ctx, size in
+                    let n = Int(size.width / T.Space.s1)
+                    for i in 0...n {
+                        let tx = CGFloat(i) * T.Space.s1
+                        let major = i % T.Ruler.majorEvery == 0
+                        let lit = showLevel && tx < x
+                        let h = (lit || major) ? T.Space.s4 : T.Space.s3
+                        let c = lit ? T.Ruler.filled(p) : (major ? T.Ruler.major(p) : T.Ruler.minor(p))
+                        ctx.fill(Path(CGRect(x: tx, y: size.height - h, width: T.Ruler.tickWidth, height: h)), with: .color(c))
+                    }
+                    if showLevel {
+                        ctx.fill(Path(CGRect(x: min(x, size.width - T.Ruler.tickWidth), y: 0, width: T.Ruler.tickWidth, height: size.height)), with: .color(T.Ruler.filled(p)))
+                    }
+                }
+    }
+
+    @ViewBuilder private func readout(x: CGFloat, w: CGFloat) -> some View {
+                if showLevel {
+                    let right = x + T.Space.s1 + T.TypeScale.numeric.size * 1.6 > w
+                    Text("\(volume)").typeStyle(T.TypeScale.numeric).foregroundStyle(p.text)
+                        .fixedSize()
+                        .alignmentGuide(.leading) { d in right ? d.width + T.Space.s1 - x : -(x + T.Space.s1) }
+                        .alignmentGuide(.bottom) { d in d[.bottom] + T.Space.s5 }
+                } else if loading && snapshot {
+                    // ImageRenderer can't draw ProgressView; use the mockup's static stand-in ring.
+                    ZStack {
+                        Circle().stroke(p.line, lineWidth: T.Focus.width)
+                        Circle().trim(from: 0, to: 0.25).stroke(p.textMuted, lineWidth: T.Focus.width).rotationEffect(.degrees(-45))
+                    }
+                    .frame(width: T.Space.s4, height: T.Space.s4)
+                    // Sits in the readout's spot above the ruler, matching the mockup.
+                    .alignmentGuide(.leading) { _ in -T.Space.s1 }
+                    .alignmentGuide(.bottom) { d in d[.bottom] + T.Space.s5 }
+                } else if loading {
+                    ProgressView().controlSize(.small)
+                        .alignmentGuide(.leading) { _ in -T.Space.s1 }
+                        .alignmentGuide(.bottom) { d in d[.bottom] + T.Space.s5 }
+                }
+    }
+
     /// Step size is 1 until MET-6 Q5 (`volumeStep`) is answered live.
     private func step(_ d: Int) -> KeyPress.Result {
         guard enabled else { return .ignored }
@@ -251,3 +279,4 @@ struct RulerView: View {
 }
 
 extension Int { func clamped(_ a: Int, _ b: Int) -> Int { Swift.min(Swift.max(self, a), b) } }
+

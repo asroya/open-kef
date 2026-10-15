@@ -102,16 +102,14 @@ impl Speaker {
         v.as_str().map(str::to_owned).ok_or_else(|| Error::Decode(format!("queue id: {v}")))
     }
 
-    /// Long-poll the queue. Returns the changed paths (empty on timeout).
-    pub fn poll(&self, queue: &str, timeout_s: u64) -> Result<Vec<String>> {
+    /// Long-poll the queue. Returns the raw items `{path, itemType, itemValue}` (empty on timeout).
+    pub fn poll(&self, queue: &str, timeout_s: u64) -> Result<Vec<Value>> {
         let t = timeout_s.to_string();
         let v = self.transport.get_json(protocol::POLL_QUEUE, &[("queueId", queue), ("timeout", &t)],
                                         Some(Duration::from_secs(timeout_s + 5)))?;
-        Ok(v.as_array().map(|a| a.iter().filter_map(|e| e.get("path").and_then(Value::as_str))
-            .map(str::to_owned).collect()).unwrap_or_default())
+        Ok(v.as_array().cloned().unwrap_or_default())
     }
 
-    /// Toggle based on current player state (`play` is confirmed in KEF Connect 1.31 strings).
     /// Sends an explicit play or pause. Callers decide the target, so a stale read can't invert it.
     pub fn set_playing(&self, play: bool) -> Result<Value> {
         self.control(if play { "play" } else { "pause" })
