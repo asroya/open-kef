@@ -40,6 +40,7 @@ struct PanelView: View {
     /// Snapshot mode draws the mockup's `color.bg` + 1pt `color.line` edge instead of the live system material.
     var snapshot = false
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.openWindow) private var openWindow
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var p: T.Palette { scheme == .dark ? T.dark : T.light }
@@ -56,6 +57,16 @@ struct PanelView: View {
             RulerView(volume: model.displayVolume, showLevel: !offline && !loading, loading: loading,
                       enabled: !offline && !loading, snapshot: snapshot, set: model.setVolume)
                 .padding(.top, T.Space.s5)
+            if !snapshot {
+                Button { openWindow(id: "now-playing") } label: {
+                    Text("Now Playing").typeStyle(T.TypeScale.label).foregroundStyle(p.textMuted)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .frame(height: T.Size.iconHit).contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Now Playing")
+                .accessibilityHint("Opens the Now Playing window")
+            }
             sources.padding(.top, T.Space.s4)
             footer.padding(.top, T.Space.s2)
         }

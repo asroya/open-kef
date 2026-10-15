@@ -1,8 +1,7 @@
 import AVKit
 import SwiftUI
 
-// MET-11 Now Playing window (mockups/met-11, rev 2 + design snob bro's idle cut: no idle subline).
-// Tokens only. Window width is size.panelWidth × 2 (mockup placeholder; token request 1 open).
+// MET-11 Now Playing window (mockups/met-11 rev 2 + tokens v0.4). Idle subline = device · source.
 
 enum WindowState: Equatable { case playing, mac, idle, offline }
 
@@ -47,7 +46,8 @@ struct NowPlayingWindow: View {
             .padding(.top, T.Space.s5).padding(.horizontal, T.Space.s5).padding(.bottom, T.Space.s4)
             footer
         }
-        .frame(width: T.Size.panelWidth * 2)
+        .frame(minWidth: T.Window.minWidth, idealWidth: T.Window.width)
+        .frame(width: T.Window.width)
         .background(p.bg)
         .foregroundStyle(p.text)
         .overlay { if snapshot { RoundedRectangle(cornerRadius: T.Radius.panel).strokeBorder(p.line, lineWidth: 1) } }
@@ -72,7 +72,7 @@ struct NowPlayingWindow: View {
     }
     private var status: some View {
         HStack(spacing: T.Space.s1) {
-            RoundedRectangle(cornerRadius: T.Radius.control).fill(offline ? p.danger : p.text).frame(width: T.Space.s2, height: T.Space.s2)
+            Circle().fill(offline ? T.Status.offline(p) : T.Status.connected(p)).frame(width: T.Status.dot, height: T.Status.dot)
             Text(offline ? "Offline" : "Connected").typeStyle(T.TypeScale.label).foregroundStyle(offline ? p.danger : p.textMuted)
         }
         .accessibilityElement(children: .combine)
@@ -92,7 +92,7 @@ struct NowPlayingWindow: View {
         case .playing:
             let sub = [np.artist, np.album].filter { !$0.isEmpty }.joined(separator: " · ")
             return (np.title, sub.isEmpty ? nil : sub, model.state.source == "wifi" ? "AirPlay 2 · Wi-Fi" : src)
-        case .idle: return ("Nothing playing", nil, src)   // idle subline cut (design snob bro)
+        case .idle: return ("Nothing playing", "\(name) · \(src)", src)
         }
     }
 
@@ -126,7 +126,7 @@ struct NowPlayingWindow: View {
                 .foregroundStyle(offline ? p.danger : p.textMuted)
         }
         .font(.system(size: T.Icon.size, weight: T.Icon.weight))
-        .frame(width: T.Size.art, height: T.Size.art)
+        .frame(width: T.Size.artLarge, height: T.Size.artLarge)
         .accessibilityHidden(true)
     }
 
@@ -230,13 +230,13 @@ struct AirPlayButton: View {
     var body: some View {
         HStack(spacing: T.Space.s2) {
             Image(systemName: "airplayaudio").font(.system(size: T.Icon.size, weight: T.Icon.weight))
-            Text("AirPlay").font(.system(size: T.TypeScale.body.size, weight: T.TypeScale.title.weight))
+            Text("AirPlay").font(.system(size: T.TypeScale.body.size, weight: T.Button.Primary.labelWeight))
         }
-        .foregroundStyle(p.bg)
-        .padding(.horizontal, T.Space.s3)
-        .frame(height: T.Size.rowHeight)
-        .background(RoundedRectangle(cornerRadius: T.Radius.control).fill(p.accent))
-        .opacity(enabled ? 1 : T.Opacity.disabled)
+        .foregroundStyle(T.Button.Primary.labelColor(p))
+        .padding(.horizontal, T.Button.Primary.paddingX)
+        .frame(height: T.Button.Primary.height)
+        .background(RoundedRectangle(cornerRadius: T.Button.Primary.radius).fill(T.Button.Primary.fill(p)))
+        .opacity(enabled ? 1 : T.Button.Primary.disabledOpacity)
         .overlay { if !snapshot && enabled { RoutePicker().opacity(0.02) } }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("AirPlay")
