@@ -1,4 +1,5 @@
-//! HTTP transport with a slot for the HTTPS:4430 + Basic auth path (MET-6, provisional).
+//! HTTP transport. MET-6 live test (LSX II LT, firmware LSXIILT_V2186): port 80 HTTP and
+//! HTTPS:4430 both answer with no auth. HTTP stays the default; HTTPS is not built (not needed).
 use crate::{protocol, Error, Result};
 use serde_json::Value;
 use std::time::Duration;
@@ -21,7 +22,9 @@ impl Endpoint {
     }
     pub fn base_url(&self) -> String {
         let s = match self.scheme { Scheme::Http => "http", Scheme::Https => "https" };
-        format!("{s}://{}:{}", self.host, self.port)
+        // IPv6 literals must be bracketed in URLs (RFC 3986); drop any %scope, which ureq can't parse.
+        let h = self.host.split('%').next().unwrap_or("");
+        if h.contains(':') && !h.starts_with('[') { format!("{s}://[{h}]:{}", self.port) } else { format!("{s}://{h}:{}", self.port) }
     }
 }
 
@@ -37,9 +40,9 @@ impl Transport {
     }
 
     fn check(&self) -> Result<()> {
-        // TLS with the speaker's pinned anchor + Basic auth slots in here once the handshake is known.
+        // MET-6 confirmed 4430 needs no auth on V2186, but plain HTTP on 80 works, so HTTPS isn't built.
         if self.endpoint.scheme == Scheme::Https {
-            return Err(Error::Unsupported("HTTPS:4430 transport pending MET-6 live test".into()));
+            return Err(Error::Unsupported("HTTPS:4430 not implemented; use HTTP on port 80 (MET-6: both unauthenticated on LSXIILT_V2186)".into()));
         }
         Ok(())
     }
@@ -95,5 +98,11 @@ mod tests {
         assert_eq!(Endpoint::http("10.0.0.2").base_url(), "http://10.0.0.2:80");
         let t = Transport::new(Endpoint::https("10.0.0.2", None));
         assert!(matches!(t.get_json("/x", &[], None), Err(Error::Unsupported(_))));
+    }
+    #[test]
+    fn ipv6_hosts_are_bracketed() {
+        assert_eq!(Endpoint::http("fe80::1%en0").base_url(), "http://[fe80::1]:80");
+        assert_eq!(Endpoint::http("[::1]").base_url(), "http://[::1]:80");
+        assert_eq!(Endpoint::http("kef.local").base_url(), "http://kef.local:80");
     }
 }

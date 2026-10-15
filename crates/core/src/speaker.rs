@@ -32,12 +32,12 @@ pub struct Speaker {
 }
 
 impl Speaker {
-    /// Default: plain HTTP on port 80 (works on current community-documented firmware).
+    /// Default: plain HTTP on port 80, no auth (MET-6 live-confirmed on LSXIILT_V2186).
     pub fn new(host: &str) -> Self {
         Self { transport: Transport::new(Endpoint::http(host)) }
     }
 
-    /// Slot for HTTPS:4430 + Basic auth once MET-6's live test confirms the handshake.
+    /// Custom endpoint. HTTPS:4430 answers unauthenticated (MET-6) but isn't implemented; HTTP is enough.
     pub fn with_endpoint(ep: Endpoint) -> Self { Self { transport: Transport::new(ep) } }
 
     pub fn endpoint(&self) -> &Endpoint { &self.transport.endpoint }

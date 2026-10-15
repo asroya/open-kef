@@ -11,14 +11,14 @@ pub mod transport;
 pub mod events;
 
 pub use speaker::{Speaker, Source};
-pub use state::{NowPlaying, SpeakerState};
+pub use state::{Controls, NowPlaying, SpeakerState};
 pub use transport::{Auth, Endpoint, Scheme};
 
 #[derive(Debug)]
 pub enum Error {
     Http(String),
     Decode(String),
-    /// Transport not built yet (HTTPS:4430 + auth, pending MET-6 live test).
+    /// Transport not built (HTTPS:4430; MET-6 showed HTTP on 80 works with no auth, so it is not needed).
     Unsupported(String),
 }
 
