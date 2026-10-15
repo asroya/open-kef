@@ -1,1 +1,17 @@
 target/
+apps/macos/.build/
+._*
+.DS_Store
+
+# Secrets: never commit
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.mobileprovision
+id_rsa*
+id_ed25519*
+*codebro*
+*.secret
+secrets/

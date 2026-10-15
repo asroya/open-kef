@@ -6,13 +6,20 @@
 
 pub mod protocol;
 pub mod speaker;
+pub mod state;
+pub mod transport;
+pub mod events;
 
 pub use speaker::{Speaker, Source};
+pub use state::{Controls, NowPlaying, SpeakerState};
+pub use transport::{Auth, Endpoint, Scheme};
 
 #[derive(Debug)]
 pub enum Error {
     Http(String),
     Decode(String),
+    /// Transport not built (HTTPS:4430; MET-6 showed HTTP on 80 works with no auth, so it is not needed).
+    Unsupported(String),
 }
 
 impl std::fmt::Display for Error {
@@ -20,6 +27,7 @@ impl std::fmt::Display for Error {
         match self {
             Error::Http(e) => write!(f, "http: {e}"),
             Error::Decode(e) => write!(f, "decode: {e}"),
+            Error::Unsupported(e) => write!(f, "unsupported: {e}"),
         }
     }
 }

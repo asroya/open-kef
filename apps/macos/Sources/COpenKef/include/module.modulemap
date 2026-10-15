@@ -1,0 +1,4 @@
+module COpenKef {
+    header "openkef.h"
+    export *
+}

@@ -191,6 +191,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "openkef-ffi"
+version = "0.0.1"
+dependencies = [
+ "openkef-core",
+ "serde_json",
+]
+
+[[package]]
 name = "percent-encoding"
 version = "2.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"

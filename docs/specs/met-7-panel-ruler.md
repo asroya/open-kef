@@ -1,6 +1,6 @@
 # Feature spec: menu-bar panel, direction C "The ruler"
 
-Filled from `docs/spec-template.md`. Tokens are from `design/tokens.json` v0.2.0.
+Filled from `docs/spec-template.md`. Tokens are from `design/tokens.json` v0.3.1.
 
 ---
 
@@ -53,7 +53,7 @@ Filled from `docs/spec-template.md`. Tokens are from `design/tokens.json` v0.2.0
 | Ruler colours | `color.*.line`, `color.*.textMuted`, `color.*.text` |
 | Level readout | `type.numeric` (with `tnum`), offset `space.5` above the base and `space.1` right of the cursor |
 | Source row | `type.body`, `type.title` weight (active), `space.3` gap, `space.4` top margin, `size.iconHit` height, `color.*.text` / `color.*.textMuted` |
-| Source pending (switching) | dotted underline, offset `space.1` |
+| Source pending (switching) | label `pending.textColor`; dotted underline `pending.underlineColor`, offset `space.1` |
 | Footer | `type.label`, `color.*.textMuted`, `space.2` top margin |
 | Offline | `color.*.danger` for the title text and for the warning icon in the art slot (overrides the slot's `color.*.textMuted`), `opacity.disabled` |
 | Loading spinner (mockup stand-in) | `space.4` size, `focus.width` ring in `color.*.line` / `color.*.textMuted`, `radius.panel`; built in-app as `motion.spinner` |
