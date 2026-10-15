@@ -4,12 +4,11 @@ use openkef_core::{events, Source, Speaker};
 use serde_json::json;
 use std::ffi::{c_char, c_void, CStr, CString};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
-use std::thread::JoinHandle;
+use std::sync::{Arc, Mutex};
 
 pub struct OkefSpeaker {
     sp: Arc<Speaker>,
-    events: Option<(Arc<AtomicBool>, JoinHandle<()>)>,
+    events: Option<(Arc<AtomicBool>, Arc<Mutex<bool>>)>,
 }
 
 pub type EventCb = extern "C" fn(*mut c_void, *const c_char);
@@ -73,24 +72,34 @@ pub unsafe extern "C" fn okef_events_start(sp: *mut OkefSpeaker, cb: Option<Even
     let (Some(h), Some(cb)) = (sp.as_mut(), cb) else { return };
     okef_events_stop(sp);
     let stop = Arc::new(AtomicBool::new(false));
-    let (spk, st, ctx) = (h.sp.clone(), stop.clone(), Ctx(ctx));
-    let jh = std::thread::spawn(move || {
+    let alive = Arc::new(Mutex::new(true));
+    let (spk, st, live, ctx) = (h.sp.clone(), stop.clone(), alive.clone(), Ctx(ctx));
+    // Detached: the thread may sit in a blocking HTTP call for a while after stop; `alive` guarantees
+    // it never calls back once okef_events_stop has returned.
+    std::thread::spawn(move || {
         let ctx = ctx;
         events::run(spk, st, |e| {
             let j = match e {
                 events::Event::State(s) => json!({"type": "state", "state": s}),
                 events::Event::Offline(r) => json!({"type": "offline", "reason": r}),
             };
-            if let Ok(c) = CString::new(j.to_string()) { cb(ctx.0, c.as_ptr()); }
+            let Ok(c) = CString::new(j.to_string()) else { return };
+            let g = live.lock().unwrap_or_else(|p| p.into_inner());
+            if *g { cb(ctx.0, c.as_ptr()); }
         });
     });
-    h.events = Some((stop, jh));
+    h.events = Some((stop, alive));
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn okef_events_stop(sp: *mut OkefSpeaker) {
     if let Some(h) = sp.as_mut() {
-        if let Some((stop, jh)) = h.events.take() { stop.store(true, Ordering::Relaxed); let _ = jh.join(); }
+        // Non-blocking: signal the loop and silence callbacks. Only waits for an in-progress callback
+        // (microseconds), never for the HTTP call the event thread may be blocked in.
+        if let Some((stop, alive)) = h.events.take() {
+            stop.store(true, Ordering::Relaxed);
+            *alive.lock().unwrap_or_else(|p| p.into_inner()) = false;
+        }
     }
 }
 
