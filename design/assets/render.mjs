@@ -17,7 +17,7 @@ for (const pt of [128,256,512]) for (const sc of [1,2]) {
   await shot(svg, `icon/AppIcon.iconset/icon_${pt}x${pt}${sc==2?'@2x':''}.png`, px, px);
 }
 for (const px of [128,256,512,1024]) await shot('icon/OpenKef-icon.svg', `icon/png/OpenKef-${px}.png`, px, px);
-await shot('menubar/MenuBarGlyph.svg','menubar/MenuBarGlyphTemplate.png',18,18,1);
+await shot('menubar/MenuBarGlyph-1x.svg','menubar/MenuBarGlyphTemplate.png',18,18,1);  // 1pt cursor variant
 await shot('menubar/MenuBarGlyph.svg','menubar/MenuBarGlyphTemplate@2x.png',18,18,2);
 await shot('dmg/dmg-background.svg','dmg/dmg-background.png',660,400,1);
 await shot('dmg/dmg-background.svg','dmg/dmg-background@2x.png',660,400,2);

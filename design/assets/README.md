@@ -13,7 +13,8 @@ Everything here is generated from `design/tokens.json` (v0.3.1) by `make_assets.
 | 16, 16@2x, 32, 32@2x (16/32/64px) | **MET-10:** drawn per size on whole pixels by `make_assets.py small` (`SMALL` table), not downscaled. Only the body corners are anti-aliased | |
 | `met-10-preview.png` | Small sizes before and after, at 100% and 400% (nearest-neighbour), on light and dark | |
 | `icon/OpenKef.icns` | Built with Pillow from the iconset | |
-| `menubar/MenuBarGlyph.svg` | Template-image master: black on transparent, macOS tints it | 18pt |
+| `menubar/MenuBarGlyph.svg` | Template-image master (@2x): black on transparent, macOS tints it; 1.5pt cursor at x=8 | 18pt |
+| `menubar/MenuBarGlyph-1x.svg` | 1x variant: 1pt cursor at x=8 (1.5pt lands on a half pixel at 1x and goes soft) | 18pt |
 | `menubar/MenuBarGlyphTemplate.png`, `@2x.png` | Template PNGs (the `Template` suffix makes AppKit treat them as template images) | 18 / 36px |
 | `dmg/dmg-background.svg`, `.png`, `@2x.png` | DMG window background | 660×400 / 1320×800 |
 | `met-9-preview.png` | Every icon size on light and dark grounds, the glyph, and the DMG with assumed icon slots | |

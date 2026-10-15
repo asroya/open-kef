@@ -44,13 +44,17 @@ def icon_svg(simple=False):
     out.append('</svg>')
     return '\n'.join(out)
 
-def glyph_svg():
-    """Menu-bar template glyph, 18pt: black on transparent (macOS tints it). Ruler + cursor."""
-    o = ['<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18">']
-    for i, x in enumerate([2, 5, 8, 11, 14]):
+def glyph_svg(px1=False):
+    """Menu-bar template glyph, 18pt: black on transparent (macOS tints it). Ruler + cursor (cursor replaces the x=8 tick).
+    Cursor is 1.5pt (3px @2x). A 1.5pt bar at x=8 ends on a half pixel at 1x and goes soft, so the 1x render
+    (px1=True, MenuBarGlyph-1x.svg) uses a 1pt cursor at x=8, rx=.5."""
+    o = ['<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18">',
+         f'<!-- {"1x variant: 1pt cursor (pixel-snapped)" if px1 else "master / @2x: 1.5pt cursor; 1x uses MenuBarGlyph-1x.svg"} -->']
+    for i, x in [(0, 2), (1, 5), (3, 11), (4, 14)]:
         h = 8 if i in (0, 4) else 5
         o.append(f'<rect x="{x}" y="{14-h}" width="1.5" height="{h}" rx=".5" fill="#000" opacity="{1 if i < 2 else T["opacity"]["disabled"]}"/>')
-    o.append('<rect x="7" y="2" width="1" height="14" rx=".5" fill="#000"/>')
+    o.append('<rect x="8" y="2" width="1" height="14" rx=".5" fill="#000"/>' if px1 else
+             '<rect x="8" y="2" width="1.5" height="14" rx=".75" fill="#000"/>')
     o.append('</svg>'); return '\n'.join(o)
 
 def dmg_svg():
@@ -104,6 +108,7 @@ elif sys.argv[1:] == ['svg']:
     (HERE/'icon/OpenKef-icon.svg').write_text(icon_svg())
     (HERE/'icon/OpenKef-icon-small.svg').write_text(icon_svg(simple=True))
     (HERE/'menubar/MenuBarGlyph.svg').write_text(glyph_svg())
+    (HERE/'menubar/MenuBarGlyph-1x.svg').write_text(glyph_svg(px1=True))
     (HERE/'dmg/dmg-background.svg').write_text(dmg_svg())
     print('svg written')
 elif sys.argv[1:] == ['pack']:
