@@ -28,6 +28,7 @@ def group(name, d, prefix=''):
 group('Space', T['space'], 's'); group('Radius', T['radius']); group('Size', T['size'])
 L.append('    enum Icon {'); L.append(f'        static let size: CGFloat = {T["icon"]["size"]}')
 L.append(f'        static let weight: Font.Weight = .{T["icon"]["weight"]}'); L.append('    }')
+L.append('    enum Focus {'); L.append(f'        static let width: CGFloat = {T["focus"]["width"]}  // HTML mockups + snapshot spinner stand-in only'); L.append('    }')
 L.append('    enum Opacity {'); L.append(f'        static let disabled: Double = {T["opacity"]["disabled"]}'); L.append('    }')
 m = T['motion']
 assert m['easing'] == 'easeOut', 'add a mapping for new easing values'

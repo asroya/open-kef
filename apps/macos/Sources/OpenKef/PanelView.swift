@@ -54,7 +54,7 @@ struct PanelView: View {
         VStack(alignment: .leading, spacing: 0) {
             nowPlaying
             RulerView(volume: model.displayVolume, showLevel: !offline && !loading, loading: loading,
-                      enabled: !offline && !loading, set: model.setVolume)
+                      enabled: !offline && !loading, snapshot: snapshot, set: model.setVolume)
                 .padding(.top, T.Space.s5)
             sources.padding(.top, T.Space.s4)
             footer.padding(.top, T.Space.s2)
@@ -172,6 +172,7 @@ struct RulerView: View {
     let showLevel: Bool
     let loading: Bool
     let enabled: Bool
+    var snapshot = false
     let set: (Int) -> Void
     @Environment(\.palette) private var p
     @FocusState private var focused: Bool
@@ -201,6 +202,13 @@ struct RulerView: View {
                         .fixedSize()
                         .alignmentGuide(.leading) { d in right ? d.width + T.Space.s1 - x : -(x + T.Space.s1) }
                         .alignmentGuide(.bottom) { d in d[.bottom] + T.Space.s5 }
+                } else if loading && snapshot {
+                    // ImageRenderer can't draw ProgressView; use the mockup's static stand-in ring.
+                    ZStack {
+                        Circle().stroke(p.line, lineWidth: T.Focus.width)
+                        Circle().trim(from: 0, to: 0.25).stroke(p.textMuted, lineWidth: T.Focus.width).rotationEffect(.degrees(-45))
+                    }
+                    .frame(width: T.Space.s4, height: T.Space.s4).padding(.bottom, T.Space.s1)
                 } else if loading {
                     ProgressView().controlSize(.small).padding(.bottom, T.Space.s1)
                 }

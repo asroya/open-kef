@@ -47,6 +47,9 @@ enum T {
         static let size: CGFloat = 16
         static let weight: Font.Weight = .regular
     }
+    enum Focus {
+        static let width: CGFloat = 2  // HTML mockups + snapshot spinner stand-in only
+    }
     enum Opacity {
         static let disabled: Double = 0.4
     }
