@@ -7,9 +7,11 @@ Everything here is generated from `design/tokens.json` (v0.3.1) by `make_assets.
 | Path | What | Sizes |
 |---|---|---|
 | `icon/OpenKef-icon.svg` | App icon master (64px and up) | 1024 viewBox |
-| `icon/OpenKef-icon-small.svg` | Simplified master for 16px and 32px (5 heavy ticks and cursor) | 1024 viewBox |
+| `icon/OpenKef-icon-small.svg` | Reference geometry for the small sizes (heavy ticks + cursor, no minor ticks) | 1024 viewBox |
 | `icon/AppIcon.iconset/` | `icon_{16,32,128,256,512}x…{,@2x}.png` | 16 to 1024px |
 | `icon/png/OpenKef-{16,32,64,128,256,512,1024}.png` | Flat exports, including 64 | |
+| 16, 16@2x, 32, 32@2x (16/32/64px) | **MET-10:** drawn per size on whole pixels by `make_assets.py small` (`SMALL` table), not downscaled. Only the body corners are anti-aliased | |
+| `met-10-preview.png` | Small sizes before and after, at 100% and 400% (nearest-neighbour), on light and dark | |
 | `icon/OpenKef.icns` | Built with Pillow from the iconset | |
 | `menubar/MenuBarGlyph.svg` | Template-image master: black on transparent, macOS tints it | 18pt |
 | `menubar/MenuBarGlyphTemplate.png`, `@2x.png` | Template PNGs (the `Template` suffix makes AppKit treat them as template images) | 18 / 36px |
@@ -39,7 +41,9 @@ Everything here is generated from `design/tokens.json` (v0.3.1) by `make_assets.
 cd design/assets
 python3 make_assets.py svg        # SVG masters from tokens.json
 node render.mjs                   # needs playwright-core + Chrome (CHROME=/path); PNG exports
+python3 make_assets.py small      # MET-10: pixel-snapped 16/32/64 into the iconset and icon/png
 python3 make_assets.py pack       # OpenKef.icns via Pillow
 python3 preview.py                # met-9-preview.png
+python3 preview_met10.py          # met-10-preview.png (pass a dir of old-<px>.png for a before row)
 ```
 On a Mac you can instead run `iconutil -c icns icon/AppIcon.iconset -o icon/OpenKef.icns`.

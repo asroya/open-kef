@@ -11,11 +11,12 @@ async function shot(svg, out, w, h, scale=1){
   await p.screenshot({path:path.join(here,out), omitBackground:true, clip:{x:0,y:0,width:w,height:h}}); await p.close();
 }
 fs.mkdirSync(path.join(here,'icon/AppIcon.iconset'),{recursive:true});
-for (const pt of [16,32,128,256,512]) for (const sc of [1,2]) {
-  const px = pt*sc, svg = px <= 32 ? 'icon/OpenKef-icon-small.svg' : 'icon/OpenKef-icon.svg';
+// 16, 16@2x, 32 and 32@2x (16/32/64px) are pixel-drawn by `make_assets.py small` (MET-10).
+for (const pt of [128,256,512]) for (const sc of [1,2]) {
+  const px = pt*sc, svg = 'icon/OpenKef-icon.svg';
   await shot(svg, `icon/AppIcon.iconset/icon_${pt}x${pt}${sc==2?'@2x':''}.png`, px, px);
 }
-for (const px of [16,32,64,128,256,512,1024]) await shot(px<=32?'icon/OpenKef-icon-small.svg':'icon/OpenKef-icon.svg', `icon/png/OpenKef-${px}.png`, px, px);
+for (const px of [128,256,512,1024]) await shot('icon/OpenKef-icon.svg', `icon/png/OpenKef-${px}.png`, px, px);
 await shot('menubar/MenuBarGlyph.svg','menubar/MenuBarGlyphTemplate.png',18,18,1);
 await shot('menubar/MenuBarGlyph.svg','menubar/MenuBarGlyphTemplate@2x.png',18,18,2);
 await shot('dmg/dmg-background.svg','dmg/dmg-background.png',660,400,1);
