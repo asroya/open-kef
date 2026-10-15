@@ -109,8 +109,12 @@ final class PanelModel: ObservableObject {
         guard let client else { return }
         Task.detached { [weak self] in
             let ok = client.playPause()
-            await MainActor.run { if ok { self?.error = nil } else { self?.fail("Couldn’t change playback.") } }
+            await self?.playDone(ok: ok)
         }
+    }
+
+    private func playDone(ok: Bool) {
+        if ok { error = nil; state.now_playing.state = isPlaying ? "paused" : "playing" } else { fail("Couldn’t change playback.") }
     }
 
     func retry() { phase = .loading; client?.start() }
