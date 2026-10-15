@@ -15,3 +15,6 @@ id_ed25519*
 *codebro*
 *.secret
 secrets/
+
+# MET-9 packaging output
+dist/
