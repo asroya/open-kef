@@ -49,8 +49,8 @@ def glyph_svg():
     o = ['<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" width="18" height="18">']
     for i, x in enumerate([2, 5, 8, 11, 14]):
         h = 8 if i in (0, 4) else 5
-        o.append(f'<rect x="{x}" y="{14-h}" width="1.5" height="{h}" rx=".5" fill="#000" opacity="{1 if i < 2 else T['opacity']['disabled']}"/>')
-    o.append('<rect x="6.25" y="2" width="1.5" height="14" rx=".75" fill="#000"/>')
+        o.append(f'<rect x="{x}" y="{14-h}" width="1.5" height="{h}" rx=".5" fill="#000" opacity="{1 if i < 2 else T["opacity"]["disabled"]}"/>')
+    o.append('<rect x="7" y="2" width="1" height="14" rx=".5" fill="#000"/>')
     o.append('</svg>'); return '\n'.join(o)
 
 def dmg_svg():
