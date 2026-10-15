@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """MET-9 asset generator. Writes SVG masters from design/tokens.json; render.mjs rasterises them; this script then builds the .icns.
-Usage: python3 make_assets.py svg && node render.mjs && python3 make_assets.py pack"""
+Usage: python3 make_assets.py svg && node render.mjs && python3 make_assets.py small && python3 make_assets.py pack"""
 import json, sys, pathlib
 HERE = pathlib.Path(__file__).parent
 T = json.load(open(HERE / '../tokens.json'))
@@ -61,10 +61,46 @@ def dmg_svg():
 <g fill="none" stroke="{L['textMuted']}" stroke-width="{R['tickWidth']*2}" stroke-linecap="round" stroke-linejoin="round">
   <path d="M{250} 200 H{410}"/><path d="M{410 - s['3']} {200 - s['3']} L410 200 L{410 - s['3']} {200 + s['3']}"/>
 </g>
-<text x="330" y="{200 + s['5']*2}" text-anchor="middle" font-family="-apple-system, 'SF Pro Text', system-ui, sans-serif" font-size="{ty['size']}" font-weight="{ty['weight']}" letter-spacing="{ty['tracking']}" fill="{L['textMuted']}">Drag open-kef to Applications</text>
+<text x="330" y="{200 + s['5']*2}" text-anchor="middle" font-family="-apple-system, 'SF Pro Text', system-ui, sans-serif" font-size="{ty['size']}" font-weight="{ty['weight']}" letter-spacing="{ty['tracking']}" fill="{L['textMuted']}">Drag OpenKef to Applications</text>
 </svg>'''
 
-if sys.argv[1:] == ['svg']:
+# --- MET-10: pixel-snapped small sizes -------------------------------------------------
+# Drawn per size on whole pixels (not downscaled from any master). Geometry follows
+# OpenKef-icon-small.svg: heavy major ticks, filled up to a tall cursor, no minor ticks.
+# Only the body's rounded corners are anti-aliased (drawn at 8x, then reduced); every tick
+# and the cursor are drawn afterwards at 1x on integer coordinates.
+SMALL = {  # px: inset, tick width, tick x (left edges), cursor x, baseline y, end/mid tick heights, cursor top..bottom
+    16: dict(inset=2, tw=1, ticks=[4, 6, 10, 12],        cur=8,  base=11, hi=5,  lo=3,  top=4,  bot=12),
+    32: dict(inset=3, tw=2, ticks=[7, 11, 15, 21, 25],   cur=18, base=22, hi=10, lo=6,  top=7,  bot=25),
+    64: dict(inset=6, tw=4, ticks=[14, 22, 30, 42, 50],  cur=36, base=44, hi=20, lo=12, top=14, bot=50),
+}
+def hexrgb(h): return tuple(int(h[i:i+2], 16) for i in (1, 3, 5)) + (255,)
+def small_icon(px):
+    from PIL import Image, ImageDraw
+    g = SMALL[px]; ss = 8; n = px * ss
+    body = Image.new('RGBA', (n, n), (0, 0, 0, 0)); d = ImageDraw.Draw(body)
+    a, b = g['inset'] * ss, (px - g['inset']) * ss - 1
+    r = round((px - 2 * g['inset']) * 185.4 / 824 * ss)            # same corner ratio as the macOS grid
+    d.rounded_rectangle([a, a, b, b], radius=r, fill=hexrgb(D['line']))          # 1px dark.line edge
+    d.rounded_rectangle([a + ss, a + ss, b - ss, b - ss], radius=max(r - ss, 0), fill=hexrgb(D['bg']))
+    im = body.resize((px, px), Image.LANCZOS); d = ImageDraw.Draw(im)
+    for i, x in enumerate(g['ticks']):
+        h = g['hi'] if i in (0, len(g['ticks']) - 1) else g['lo']
+        col = D['text'] if x < g['cur'] else D['textMuted']               # filled up to the cursor
+        d.rectangle([x, g['base'] - h, x + g['tw'] - 1, g['base'] - 1], fill=hexrgb(col))
+    d.rectangle([g['cur'], g['top'], g['cur'] + g['tw'] - 1, g['bot'] - 1], fill=hexrgb(D['text']))
+    return im
+
+def write_small():
+    src = HERE / 'icon/AppIcon.iconset'
+    for name, px in [('icon_16x16', 16), ('icon_16x16@2x', 32), ('icon_32x32', 32), ('icon_32x32@2x', 64)]:
+        small_icon(px).save(src / f'{name}.png')
+    for px in (16, 32, 64):
+        small_icon(px).save(HERE / f'icon/png/OpenKef-{px}.png')
+
+if sys.argv[1:] == ['small']:
+    write_small(); print('small sizes written')
+elif sys.argv[1:] == ['svg']:
     (HERE/'icon/OpenKef-icon.svg').write_text(icon_svg())
     (HERE/'icon/OpenKef-icon-small.svg').write_text(icon_svg(simple=True))
     (HERE/'menubar/MenuBarGlyph.svg').write_text(glyph_svg())
