@@ -76,48 +76,42 @@ I = {'play': '<svg class="g f" viewBox="0 0 16 16"><path d="M5 3.5v9l7-4.5z"/></
 # MET-6: LSX II LT inputs (model note, inferred) and the confirmed kefPhysicalSource values among them
 SOURCES = [('wifi', 'Wi-Fi'), ('bluetooth', 'Bluetooth'), ('tv', 'TV'), ('optical', 'Optical'), ('usb', 'USB')]
 VOL = 40  # placeholder level (protocol doc example)
-STATES = [('spotify', 'Playing · Spotify Connect'), ('airplay', 'Mac audio over AirPlay · provisional'),
+STATES = [('airplay', 'Playing · Apple Music over AirPlay'), ('mac', 'AirPlay from this Mac'),
           ('idle', 'Idle · no media'), ('offline', 'Offline')]
 
 def window(sid):
-    off = sid == 'offline'; idle = sid == 'idle'; ap = sid == 'airplay'; sp = sid == 'spotify'
+    off = sid == 'offline'; idle = sid == 'idle'; ap = sid == 'airplay'; mac = sid == 'mac'
     src = 'wifi'
-    if sp: art, title, sub, via = I['note'], 'Teardrop', 'Massive Attack · Mezzanine', 'Spotify Connect · Wi-Fi'
-    elif ap: art, title, sub, via = I['airplay'], 'Teardrop', 'Massive Attack · Mezzanine', 'AirPlay 2 from this Mac · Wi-Fi'
-    elif idle: art, title, sub, via = I['note'], 'Nothing playing', 'Choose a source below, or play from this Mac', 'Wi-Fi'
-    else: art, title, sub, via = I['warn'], 'Living Room is offline', 'Check that the speaker is on and on this network', '—'
-    playing = sp or ap
+    if ap: art, title, sub, via = I['note'], 'Teardrop', 'Massive Attack · Mezzanine', 'AirPlay 2 · Wi-Fi'
+    elif mac: art, title, sub, via = I['airplay'], 'This Mac', 'System audio', 'AirPlay 2 from this Mac · Wi-Fi'
+    elif idle: art, title, sub, via = I['note'], 'Nothing playing', 'Choose this speaker in AirPlay to start', 'Wi-Fi'
+    else: art, title, sub, via = I['warn'], 'Living Room is offline', 'Check that the speaker is on and on this network', ''
+    playing = ap or mac
     dis = ' disabled' if off or idle else ''
     status = ('<span class="status l danger"><i class="dot off"></i>Offline</span>' if off
               else '<span class="status l mu"><i class="dot"></i>Connected</span>')
     ruler = ('' if off else f'<div class="lvl" style="width:{VOL}%"></div><div class="cur" style="left:{VOL}%"><span class="n">{VOL}</span></div>')
     srcs = ''.join(f'<button role="radio" aria-checked="{"true" if k == src and not off else "false"}"{" disabled" if off else ""}>{n}</button>' for k, n in SOURCES)
-    # AirPlay row
-    if ap:
-        mac = ('<div class="row"><span class="mu">' + I['airplay'] + '</span><div class="ell" style="flex:1"><div style="font-weight:var(--title-weight)">Mac audio is playing on Living Room</div>'
-               '<div class="mu">AirPlay 2 · CD quality · speaker input set to Wi-Fi</div></div><button class="btn">Stop</button></div>')
-    else:
-        mac = ('<div class="row"><span class="mu">' + I['airplay'] + '</span><div class="ell" style="flex:1"><div style="font-weight:var(--title-weight)">Play this Mac on Living Room</div>'
-               '<div class="mu">Sets the speaker to Wi-Fi and the Mac’s output to it (AirPlay 2)</div></div>'
-               f'<button class="btn primary"{" disabled" if off else ""}>Play Mac audio</button></div>')
-    def svc(name, note, active=False, prov=False):
-        st = f'<span class="l">Playing now</span>' if active else f'<span class="{"mu prov" if prov else "l mu"}">{note}</span>'
-        return (f'<div class="svc"><div><div style="font-weight:var(--title-weight)">{name}</div>{st}</div>'
-                f'<button class="btn"{" disabled" if off else ""}>Open {name.split()[0]}</button></div>')
-    svcs = (svc('Spotify Connect', 'Pick “Living Room” in Spotify’s device list', active=sp) +
-            svc('Tidal Connect', 'Provisional: Connect not confirmed on KEF (MET-6)', prov=True) +
-            svc('Qobuz Connect', 'Provisional: Connect not confirmed on KEF (MET-6)', prov=True))
+    # The single primary action: system AirPlay picker (AVRoutePickerView)
+    head = 'This Mac is playing on Living Room' if mac else 'Play to Living Room with AirPlay'
+    note = 'Mac output is set to Living Room · AirPlay 2' if mac else 'Opens the AirPlay menu. Pick Living Room as the output.'
+    airplay = (f'<div class="row"><div class="ell" style="flex:1"><div style="font-weight:var(--title-weight)">{head}</div>'
+               f'<div class="mu ell">{note}</div></div><button class="btn primary" aria-haspopup="menu"{" disabled" if off else ""}>{I["airplay"]}AirPlay</button></div>')
+    ytm = ('<div class="svc"><div><div style="font-weight:var(--title-weight)">YouTube Music</div>'
+           '<div class="mu">On this Mac: play it in Safari, then choose Living Room from Safari’s AirPlay button.</div>'
+           '<div class="mu">On your phone: tap Cast in the YouTube Music app and choose Living Room (Google Cast).</div></div></div>')
     btn = 'pause' if playing else 'play'
+    viahtml = '' if off else f'<div class="l mu ell">{via}</div>'
     return f'''<div class="win" role="dialog" aria-label="OpenKef">
 <div class="bar"><div class="lights" aria-hidden="true"><i></i><i></i><i></i></div><span class="ttl l">OpenKef</span>{status}</div>
 <div class="body">
 <section aria-label="Now playing"><div class="np"><div class="art{" danger" if off else ""}" aria-hidden="true">{art}</div>
-<div class="ell" style="flex:1"><div class="t ell{" danger" if off else (" mu" if idle else "")}">{title}</div><div class="mu ell">{sub}</div>{"" if off else f'<div class="l mu ell">{via}</div>'}</div>
+<div class="ell" style="flex:1"><div class="t ell{" danger" if off else (" mu" if idle else "")}">{title}</div><div class="mu ell">{sub}</div>{viahtml}</div>
 <button class="hit" aria-label="Previous"{dis}>{I["prev"]}</button><button class="hit" aria-label="{btn.title()}"{dis}>{I[btn]}</button><button class="hit" aria-label="Next"{dis}>{I["next"]}</button></div>
 <div class="ruler"><div class="ticks"></div><div class="ticks maj"></div>{ruler}<input type="range" min="0" max="100" value="{0 if off else VOL}" aria-label="Volume"{" disabled" if off else ""}></div></section>
-<section aria-label="Play from this Mac">{mac}</section>
+<section aria-label="AirPlay">{airplay}</section>
 <section aria-label="Input"><div class="sh"><span class="l mu">Input</span></div><div class="srcs" role="radiogroup" aria-label="Input">{srcs}</div></section>
-<section aria-label="Streaming services"><div class="sh"><span class="l mu">Stream to Living Room</span><span class="l mu">Plays from the service at full quality</span></div>{svcs}</section>
+<section aria-label="Other apps"><div class="sh"><span class="l mu">Other apps</span></div>{ytm}</section>
 </div>
 <div class="foot"><span class="l mu">Living Room · LSX II LT</span><span class="l mu">{"Last seen on this network" if off else "Wi-Fi input"}</span></div></div>'''
 
