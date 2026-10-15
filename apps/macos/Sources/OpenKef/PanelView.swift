@@ -88,12 +88,15 @@ struct PanelView: View {
             .lineLimit(1).truncationMode(.tail)
             .frame(maxWidth: .infinity, alignment: .leading)
             let showPause = model.isPlaying && model.phase == .ready
+            // Sources like TV report controls.pause == false: the speaker can't pause them.
+            let canToggle = showPause ? model.state.now_playing.controls.pause : true
             Button(action: model.playPause) {
                 Image(systemName: showPause ? "pause.fill" : "play.fill")
                     .font(.system(size: T.Icon.size * 0.6, weight: T.Icon.weight))
             }
             .buttonStyle(HitButtonStyle())
-            .disabled(offline || loading || switching != nil)
+            .disabled(offline || loading || switching != nil || !canToggle)
+            .opacity(canToggle ? 1 : T.Opacity.disabled)
             .accessibilityLabel(showPause ? "Pause" : "Play")
         }
     }

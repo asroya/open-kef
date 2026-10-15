@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Fixture states matching mockups/met-7 (Teardrop · Massive Attack, volume 40, Wi-Fi, Living Room · LSX II LT).
 enum Mock {
-    static let states = ["playing", "paused", "offline", "switching", "loading", "error"]
+    static let states = ["playing", "paused", "offline", "switching", "loading", "error", "tv-playing"]
 
     @MainActor static func model(_ name: String) -> PanelModel {
         let m = PanelModel(client: nil)
@@ -12,6 +12,13 @@ enum Mock {
         s.device_name = "Living Room"; s.model_name = "LSX II LT"
         s.now_playing = .init(state: name == "paused" ? "paused" : "playing", title: "Teardrop",
                               artist: "Massive Attack", album: "Mezzanine", artwork_url: "")
+        s.now_playing.controls = .init(next: true, previous: true, pause: true)
+        if name == "tv-playing" {
+            // Live MET-6 shape for the TV input: title "TV", no metadata, every control false.
+            s.source = "tv"
+            s.now_playing = .init(state: "playing", title: "TV", artist: "", album: "", artwork_url: "")
+            s.now_playing.controls = .init(next: false, previous: false, pause: false)
+        }
         m.state = s
         m.displayVolume = 40
         switch name {
