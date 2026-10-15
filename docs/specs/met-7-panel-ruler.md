@@ -111,7 +111,7 @@ Filled from `docs/spec-template.md`. Tokens are from `design/tokens.json` v0.2.0
 ## Provisional, pending MET-6
 - **Provisional states:** Speaker offline and Changing source. Both may change once MET-6 confirms what the API reports.
 - **Open questions:**
-  1. Which `kefPhysicalSource` values does the LSX II LT accept? The mockup assumes wifi, bluetooth, tv, optic and usb. The code also has coaxial and analog.
+  1. Which `kefPhysicalSource` values does the LSX II LT accept? The mockup assumes wifi, bluetooth, tv, optical and usb. The code also has coaxial and analog.
   2. How does offline show up (HTTP timeout, mDNS drop, or `speakerStatus = standby`)? Standby and unreachable need different UI.
   3. Is a source change instant, or is there a transitional state we can see through `pollQueue`, and how long does it take?
   4. Does `player:player/data` keep the old track after switching to TV or Optical, or clear it?
