@@ -163,7 +163,6 @@ struct PanelView: View {
                 Text("Switching…").typeStyle(T.TypeScale.label).foregroundStyle(p.textMuted)
             }
         }
-        .frame(minHeight: T.Size.iconHit)
     }
 }
 
