@@ -96,7 +96,6 @@ struct PanelView: View {
             }
             .buttonStyle(HitButtonStyle())
             .disabled(offline || loading || switching != nil || !canToggle)
-            .opacity(canToggle ? 1 : T.Opacity.disabled)
             .accessibilityLabel(showPause ? "Pause" : "Play")
         }
     }
