@@ -61,7 +61,7 @@ pub unsafe extern "C" fn okef_set_source(sp: *mut OkefSpeaker, src: *const c_cha
     rc(h.sp.set_source(src))
 }
 #[no_mangle]
-pub unsafe extern "C" fn okef_play_pause(sp: *mut OkefSpeaker) -> i32 { sp.as_ref().map_or(-2, |h| rc(h.sp.play_pause())) }
+pub unsafe extern "C" fn okef_set_playing(sp: *mut OkefSpeaker, play: bool) -> i32 { sp.as_ref().map_or(-2, |h| rc(h.sp.set_playing(play))) }
 #[no_mangle]
 pub unsafe extern "C" fn okef_next(sp: *mut OkefSpeaker) -> i32 { sp.as_ref().map_or(-2, |h| rc(h.sp.control("next"))) }
 #[no_mangle]
@@ -121,7 +121,7 @@ mod tests {
     fn header_declares_every_export() {
         let hdr = include_str!("../include/openkef.h");
         for f in ["okef_connect","okef_free","okef_get_state","okef_string_free","okef_set_volume","okef_set_mute",
-                  "okef_set_source","okef_play_pause","okef_next","okef_previous","okef_events_start","okef_events_stop"] {
+                  "okef_set_source","okef_set_playing","okef_next","okef_previous","okef_events_start","okef_events_stop"] {
             assert!(hdr.contains(&format!("{f}(")), "{f} missing from header");
         }
     }

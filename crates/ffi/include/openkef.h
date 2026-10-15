@@ -21,7 +21,7 @@ void okef_string_free(char *s);
 int32_t okef_set_volume(OkefSpeaker *sp, uint8_t volume);  // 0..100
 int32_t okef_set_mute(OkefSpeaker *sp, bool muted);
 int32_t okef_set_source(OkefSpeaker *sp, const char *source); // wifi|bluetooth|tv|optical|usb|...
-int32_t okef_play_pause(OkefSpeaker *sp);
+int32_t okef_set_playing(OkefSpeaker *sp, bool play); // explicit play (true) / pause (false)
 int32_t okef_next(OkefSpeaker *sp);
 int32_t okef_previous(OkefSpeaker *sp);
 

@@ -112,9 +112,9 @@ impl Speaker {
     }
 
     /// Toggle based on current player state (`play` is confirmed in KEF Connect 1.31 strings).
-    pub fn play_pause(&self) -> Result<Value> {
-        let playing = self.now_playing().map(|n| n.state == "playing").unwrap_or(false);
-        self.control(if playing { "pause" } else { "play" })
+    /// Sends an explicit play or pause. Callers decide the target, so a stale read can't invert it.
+    pub fn set_playing(&self, play: bool) -> Result<Value> {
+        self.control(if play { "play" } else { "pause" })
     }
 
     pub fn volume(&self) -> Result<i64> {

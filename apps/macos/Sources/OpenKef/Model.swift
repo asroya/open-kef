@@ -99,9 +99,9 @@ final class PanelModel: ObservableObject {
 
     func setSource(_ id: String) {
         guard phase == .ready, id != state.source else { return }
+        guard let client else { return }   // no speaker bound (mock/discovery): nothing to switch
         let from = state.source
         phase = .switching(to: id, from: from)
-        guard let client else { return }
         Task.detached { [weak self] in
             let ok = client.setSource(id)
             await self?.sourceDone(ok: ok, id: id)
@@ -125,11 +125,12 @@ final class PanelModel: ObservableObject {
         guard let client, !playInFlight else { return }
         // Decide the target once, before the call, so a `state` event that lands first can't make us invert it again.
         let from = state.now_playing.state
+        // The UI decides the target; the core sends that exact command (no re-read + toggle in Rust).
         let target = isPlaying ? "paused" : "playing"
         playInFlight = true
         state.now_playing.state = target
         Task.detached { [weak self] in
-            let ok = client.playPause()
+            let ok = client.setPlaying(target == "playing")
             await self?.playDone(ok: ok, from: from, target: target)
         }
     }
