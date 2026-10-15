@@ -34,9 +34,16 @@ struct OpenKefApp: App {
             let m = PanelModel(client: c); m.start(); return m
         }
         let m = PanelModel(client: nil)
-        discovery.find { host in
-            Task { @MainActor in if let c = SpeakerClient(host: host) { m.bind(c) } }
+        let search = { [weak m] in
+            discovery.find { host in
+                Task { @MainActor in
+                    guard let m else { return }
+                    if let host, let c = SpeakerClient(host: host) { m.bind(c) } else { m.phase = .offline }
+                }
+            }
         }
+        m.rediscover = search
+        search()
         return m
     }
     private static let discovery = Discovery()
