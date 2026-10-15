@@ -4,11 +4,21 @@ import SwiftUI
 /// Entry point. Modes:
 ///   OPENKEF_HOST=<ip>           bind to a speaker directly (else Bonjour `_kef-info._tcp`)
 ///   OPENKEF_MOCK=<state>        render a fixture state without a speaker (playing|paused|offline|switching|loading|error)
+///   OpenKef --music-now-playing  print Music.app's current track (or 'not running') and exit
 ///   OpenKef --snapshot <dir>    write every state, light + dark, as 2x PNGs and exit
 @main
 enum Main {
     static func main() {
         let args = CommandLine.arguments
+        if args.contains("--music-now-playing") {   // MET-11 check: prints Music's current track; never launches Music
+            switch MusicReader.read() {
+            case .notRunning: print("Music: not running")
+            case .failed(let e): print("Music: error: \(e)")
+            case .track(let t):
+                print("Music: \(t.state)" + (t.name.isEmpty ? "" : " | \(t.name) | \(t.artist) | \(t.album) | \(Int(t.position))s/\(Int(t.duration))s"))
+            }
+            return
+        }
         if let i = args.firstIndex(of: "--snapshot"), i + 1 < args.count {
             MainActor.assumeIsolated { Snapshot.run(to: URL(fileURLWithPath: args[i + 1])) }
             return

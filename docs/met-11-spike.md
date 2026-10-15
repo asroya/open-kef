@@ -56,3 +56,9 @@ POST /api/setData
 1. Fix `next_` now. Build the now-playing UI on `trackRoles` + `mediaData.metaData` + `playTime`, and confirm artist, album, artwork and duration with a streaming source.
 2. Keep source switching as is. Treat the per-source volume as authoritative from events.
 3. AirPlay: ship an `AVRoutePickerView` button (public, about 20 lines). Don't use private `AVOutputContext`. Don't build our own AirPlay 2 sender unless there's a strong reason.
+
+## Implemented on met-11 (no UI)
+- `controls.next` reads the speaker's `next_` (and `next`).
+- Event loop applies pollQueue values directly (`SpeakerState::apply_event`), so after a source switch the volume comes from the event (recorded tv→wifi test: 49 → 35). Unmodelled paths fall back to a full refetch.
+- `MusicNowPlaying.swift`: Music.app track via AppleScript, only if `com.apple.Music` is already running. `OpenKef --music-now-playing` prints it.
+- **Info.plist needs** `NSAppleEventsUsageDescription` ("open-kef reads what's playing in Music to show it in the panel."). `scripts/package_dmg.sh` lives on met-9 (PR #5), not main, so add the key there once that's merged. Ad-hoc/SwiftPM binaries also need the user's Automation consent for Music.
