@@ -208,9 +208,14 @@ struct RulerView: View {
                         Circle().stroke(p.line, lineWidth: T.Focus.width)
                         Circle().trim(from: 0, to: 0.25).stroke(p.textMuted, lineWidth: T.Focus.width).rotationEffect(.degrees(-45))
                     }
-                    .frame(width: T.Space.s4, height: T.Space.s4).padding(.bottom, T.Space.s1)
+                    .frame(width: T.Space.s4, height: T.Space.s4)
+                    // Sits in the readout's spot above the ruler, matching the mockup.
+                    .alignmentGuide(.leading) { _ in -T.Space.s1 }
+                    .alignmentGuide(.bottom) { d in d[.bottom] + T.Space.s5 }
                 } else if loading {
-                    ProgressView().controlSize(.small).padding(.bottom, T.Space.s1)
+                    ProgressView().controlSize(.small)
+                        .alignmentGuide(.leading) { _ in -T.Space.s1 }
+                        .alignmentGuide(.bottom) { d in d[.bottom] + T.Space.s5 }
                 }
             }
             .contentShape(Rectangle())
