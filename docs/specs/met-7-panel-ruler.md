@@ -55,7 +55,7 @@ Filled from `docs/spec-template.md`. Tokens are from `design/tokens.json` v0.2.0
 | Source row | `type.body`, `type.title` weight (active), `space.3` gap, `space.4` top margin, `size.iconHit` height, `color.*.text` / `color.*.textMuted` |
 | Source pending (switching) | dotted underline, offset `space.1` |
 | Footer | `type.label`, `color.*.textMuted`, `space.2` top margin |
-| Offline | `color.*.danger` (title text, warning icon), `opacity.disabled` |
+| Offline | `color.*.danger` for the title text and for the warning icon in the art slot (overrides the slot's `color.*.textMuted`), `opacity.disabled` |
 | Loading spinner (mockup stand-in) | `space.4` size, `focus.width` ring in `color.*.line` / `color.*.textMuted`, `radius.panel`; built in-app as `motion.spinner` |
 | Error message | `type.body`, `color.*.danger` |
 | Focus (mockup only) | `focus.width`, `focus.offset`, `color.*.accent` |

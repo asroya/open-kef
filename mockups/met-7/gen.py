@@ -35,7 +35,7 @@ body{margin:0;background:var(--surface);font-family:-apple-system,BlinkMacSystem
 .art{width:var(--art);height:var(--art);border-radius:var(--r-art);background:var(--surface);border:1px solid var(--line);flex:none;display:grid;place-items:center;color:var(--textMuted)}
 .hit{width:var(--iconHit);height:var(--iconHit);border-radius:var(--r-control);display:grid;place-items:center;border:0;background:none;color:var(--text);padding:0;flex:none;cursor:default;font:inherit}
 .hit:hover{background:var(--surface)}
-.hit:focus-visible,.seg button:focus-visible,.row:focus-visible,input:focus-visible{outline:var(--focus-w) solid var(--accent);outline-offset:var(--focus-o)}
+.hit:focus-visible,.seg button:focus-visible,.row:focus-visible,.srcs button:focus-visible,input:focus-visible{outline:var(--focus-w) solid var(--accent);outline-offset:var(--focus-o)}
 .hit[disabled],button[disabled]{opacity:var(--o-disabled)}
 svg.g{width:var(--s4);height:var(--s4);fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 svg.g.f{fill:currentColor;stroke:none}
@@ -165,7 +165,7 @@ def C(sid):
     dis=' disabled' if off or sw or load else ''
     srcs=''.join(f'<button role="radio" aria-checked="{"true" if k==c and not sw and not off and not load else "false"}" class="{"pending" if sw and k==c else ""}"{" disabled" if off or load else ""}>{n}</button>' for k,n in SOURCES)
     return f'''<div class="panel" role="dialog" aria-label="open-kef">
-<div class="big"><div class="art" aria-hidden="true">{I["warn"] if off else I["note"]}</div><div class="ell" style="flex:1"><div class="t ell{" danger" if off else ""}">{title}</div><div class="b mu ell">{sub}</div></div><button class="hit" aria-label="{"Play" if btn=="play" else "Pause"}"{dis}>{I[btn]}</button></div>
+<div class="big"><div class="art" aria-hidden="true">{"<span class=\"danger\" style=\"display:grid\">"+I["warn"]+"</span>" if off else I["note"]}</div><div class="ell" style="flex:1"><div class="t ell{" danger" if off else ""}">{title}</div><div class="b mu ell">{sub}</div></div><button class="hit" aria-label="{"Play" if btn=="play" else "Pause"}"{dis}>{I[btn]}</button></div>
 <div class="ruler" aria-hidden="false"><div class="ticks"></div><div class="ticks maj"></div>{('<div class="cur" style="left:0;border:0"><span class="spinner" role="progressbar" aria-label="Loading volume"></span></div>' if load else ("" if off else f'<div class="lvl" style="width:{v}%"></div><div class="cur" style="left:{v}%"><span class="n">{v}</span></div>'))}<input type="range" min="0" max="100" value="{v}" aria-label="Volume"{" disabled" if off or load else ""}></div>
 <div class="srcs" role="radiogroup" aria-label="Source">{srcs}</div>
 <div style="display:flex;justify-content:space-between;align-items:center;margin-top:var(--s2)">{'<span class="b danger" role="alert">Couldn’t set volume. Reverted.</span>' if err else '<span class="l mu">Living Room · LSX II LT</span>'}{'<button class="hit l" style="width:auto;padding:0 var(--s2)">Retry</button>' if off else '<span class="l mu">'+('Switching…' if sw else '')+'</span>'}</div></div>'''
