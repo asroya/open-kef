@@ -3,16 +3,18 @@ import SwiftUI
 
 // MET-11 Now Playing window (mockups/met-11 rev 2 + tokens v0.4). Idle subline = device · source.
 
-enum WindowState: Equatable { case playing, mac, idle, offline }
+enum WindowState: Equatable { case playing, mac, idle, offline, connecting }
 
 @MainActor
 final class WindowModel: ObservableObject {
     @Published var macIsAirPlaying = false
     private var timer: Timer?
     func start() {
+        stop()
         refresh()
         timer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { [weak self] _ in Task { @MainActor in self?.refresh() } }
     }
+    func stop() { timer?.invalidate(); timer = nil }
     func refresh() { macIsAirPlaying = MacAudioRoute.defaultOutputIsAirPlay() }
 }
 
@@ -26,12 +28,16 @@ struct NowPlayingWindow: View {
 
     var state: WindowState {
         if model.phase == .offline { return .offline }
+        if model.phase == .loading { return .connecting }
         if route.macIsAirPlaying && model.state.source == "wifi" { return .mac }
         let np = model.state.now_playing
         if !np.title.isEmpty && (np.state == "playing" || np.state == "paused") { return .playing }
         return .idle
     }
     private var offline: Bool { state == .offline }
+    private var loading: Bool { state == .connecting }
+    /// Match the panel: disable ruler / inputs / AirPlay until truly connected.
+    private var controlsEnabled: Bool { !offline && !loading }
     private var name: String { model.deviceName }
 
     var body: some View {
@@ -71,9 +77,12 @@ struct NowPlayingWindow: View {
         .overlay(alignment: .bottom) { Rectangle().fill(p.line).frame(height: 1) }
     }
     private var status: some View {
-        HStack(spacing: T.Space.s1) {
-            Circle().fill(offline ? T.Status.offline(p) : T.Status.connected(p)).frame(width: T.Status.dot, height: T.Status.dot)
-            Text(offline ? "Offline" : "Connected").typeStyle(T.TypeScale.label).foregroundStyle(offline ? p.danger : p.textMuted)
+        let label = offline ? "Offline" : loading ? "Connecting" : "Connected"
+        let dot = offline ? T.Status.offline(p) : loading ? p.textMuted : T.Status.connected(p)
+        let text = offline ? p.danger : p.textMuted
+        return HStack(spacing: T.Space.s1) {
+            Circle().fill(dot).frame(width: T.Status.dot, height: T.Status.dot)
+            Text(label).typeStyle(T.TypeScale.label).foregroundStyle(text)
         }
         .accessibilityElement(children: .combine)
     }
@@ -84,6 +93,7 @@ struct NowPlayingWindow: View {
         let src = sourceLabel(model.state.source)
         switch state {
         case .offline: return ("\(name) is offline", "Check that the speaker is on and on this network", nil)
+        case .connecting: return ("Connecting…", name, nil)
         case .mac:
             if let t = music.track, t.state == "playing", !t.name.isEmpty {
                 return (t.name, [t.artist, t.album].filter { !$0.isEmpty }.joined(separator: " · "), "AirPlay 2 from this Mac · Wi-Fi")
@@ -102,7 +112,7 @@ struct NowPlayingWindow: View {
                 art
                 VStack(alignment: .leading, spacing: 0) {
                     Text(lines.title).typeStyle(T.TypeScale.title)
-                        .foregroundStyle(offline ? p.danger : state == .idle ? p.textMuted : p.text)
+                        .foregroundStyle(offline ? p.danger : (state == .idle || loading) ? p.textMuted : p.text)
                     if let s = lines.sub { Text(s).typeStyle(T.TypeScale.body).foregroundStyle(p.textMuted) }
                     if let l = lines.label { Text(l).typeStyle(T.TypeScale.label).foregroundStyle(p.textMuted) }
                 }
@@ -110,7 +120,7 @@ struct NowPlayingWindow: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 transport
             }
-            RulerView(volume: model.displayVolume, showLevel: !offline, loading: false, enabled: !offline,
+            RulerView(volume: model.displayVolume, showLevel: controlsEnabled, loading: loading, enabled: controlsEnabled,
                       snapshot: snapshot, pinBottom: true, set: model.setVolume)
                 .padding(.top, T.Space.s5)
             Color.clear.frame(height: T.Space.s4)   // section padding-bottom (space.4)
@@ -168,7 +178,7 @@ struct NowPlayingWindow: View {
                     .typeStyle(T.TypeScale.body).foregroundStyle(p.textMuted)
             }
             .lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
-            AirPlayButton(snapshot: snapshot).disabled(offline)
+            AirPlayButton(snapshot: snapshot).disabled(!controlsEnabled)
         }
         .frame(minHeight: T.Size.rowHeight)
         .accessibilityElement(children: .contain).accessibilityLabel("AirPlay")
@@ -187,8 +197,8 @@ struct NowPlayingWindow: View {
                             .frame(height: T.Size.iconHit).contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .disabled(offline)
-                    .opacity(offline ? T.Opacity.disabled : 1)
+                    .disabled(!controlsEnabled)
+                    .opacity(controlsEnabled ? 1 : T.Opacity.disabled)
                     .accessibilityAddTraits(active ? [.isSelected] : [])
                 }
             }
@@ -212,7 +222,7 @@ struct NowPlayingWindow: View {
         HStack(spacing: T.Space.s3) {
             Text("\(name) · \(model.modelName)")
             Spacer()
-            Text(offline ? "Last seen on this network" : "\(sourceLabel(model.state.source)) input")
+            Text(offline ? "Last seen on this network" : loading ? "Looking for \(name) on this network" : "\(sourceLabel(model.state.source)) input")
         }
         .typeStyle(T.TypeScale.label).foregroundStyle(p.textMuted).lineLimit(1)
         .padding(.vertical, T.Space.s2).padding(.horizontal, T.Space.s5)

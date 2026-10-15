@@ -47,7 +47,7 @@ struct OpenKefApp: App {
         Window("OpenKef", id: "now-playing") {
             NowPlayingWindow(model: model, route: route, music: music)
                 .onAppear { route.start(); music.start() }
-                .onDisappear { music.stop() }
+                .onDisappear { route.stop(); music.stop() }
         }
         .windowResizability(.contentSize)
         .keyboardShortcut("0")

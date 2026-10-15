@@ -28,7 +28,7 @@ enum MusicReader {
 
     enum Result: Equatable { case notRunning, track(MusicTrack), failed(String) }
 
-    /// Blocking (Apple Events round-trip); call off the main thread.
+    /// Blocking (Apple Events round-trip); must run on the main thread (NSAppleScript is not thread-safe).
     static func read() -> Result {
         guard isRunning else { return .notRunning }   // `tell application` would launch it otherwise
         var err: NSDictionary?
@@ -65,10 +65,8 @@ final class MusicNowPlayingModel: ObservableObject {
     func stop() { timer?.invalidate(); timer = nil }
 
     func refresh() {
-        Task.detached {
-            let r = MusicReader.read()
-            await MainActor.run { [weak self] in self?.apply(r) }
-        }
+        // NSAppleScript must run on the main thread; MusicNowPlayingModel is @MainActor.
+        apply(MusicReader.read())
     }
     private func apply(_ r: MusicReader.Result) {
         switch r {
