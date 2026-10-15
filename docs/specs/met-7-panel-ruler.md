@@ -1,6 +1,6 @@
 # Feature spec: menu-bar panel, direction C "The ruler"
 
-Filled from `docs/spec-template.md`. Tokens are from `design/tokens.json` v0.2.0.
+Filled from `docs/spec-template.md`. Tokens are from `design/tokens.json` v0.3.1.
 
 ---
 
