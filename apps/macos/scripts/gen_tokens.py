@@ -37,7 +37,7 @@ L += ['    enum Ruler {', f'        static let tickWidth: CGFloat = {r["tickWidt
       f'        static func minor(_ p: Palette) -> Color {{ p.{role(r["tickMinor"])} }}',
       f'        static func major(_ p: Palette) -> Color {{ p.{role(r["tickMajor"])} }}', '    }',
       '    enum Pending {', f'        static let width: CGFloat = {pd["width"]}',
-      f'        static func color(_ p: Palette) -> Color {{ p.{role(pd["color"])} }}', '    }']
+      f'        static func textColor(_ p: Palette) -> Color {{ p.{role(pd["textColor"])} }}', f'        static func underlineColor(_ p: Palette) -> Color {{ p.{role(pd["underlineColor"])} }}', '    }']
 L.append('    enum Opacity {'); L.append(f'        static let disabled: Double = {T["opacity"]["disabled"]}'); L.append('    }')
 m = T['motion']
 assert m['easing'] == 'easeOut', 'add a mapping for new easing values'

@@ -127,8 +127,8 @@ struct PanelView: View {
                     Text(src.label)
                         .font(.system(size: T.TypeScale.body.size, weight: active ? T.TypeScale.title.weight : T.TypeScale.body.weight))
                         .tracking(T.TypeScale.body.tracking)
-                        .foregroundStyle(active || pending ? p.text : p.textMuted)
-                        .underline(pending, pattern: .dot, color: T.Pending.color(p))
+                        .foregroundStyle(pending ? T.Pending.textColor(p) : active ? p.text : p.textMuted)
+                        .underline(pending, pattern: .dot, color: T.Pending.underlineColor(p))
                         .frame(height: T.Size.iconHit)
                         .contentShape(Rectangle())
                 }
