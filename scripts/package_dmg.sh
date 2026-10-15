@@ -37,21 +37,10 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 PLIST
 plutil -lint "$APP/Contents/Info.plist"
 
-# Placeholder icon (flat tile) until Pixel Snob delivers the real one.
-TMP=$(mktemp -d); ICONSET="$TMP/AppIcon.iconset"; mkdir "$ICONSET"
-python3 - "$TMP/base.png" <<'PY'
-import sys, zlib, struct
-n=1024; row=b"\x00"+bytes([28,28,30])*n
-def chunk(t,d): return struct.pack(">I",len(d))+t+d+struct.pack(">I",zlib.crc32(t+d)&0xffffffff)
-png=b"\x89PNG\r\n\x1a\n"+chunk(b"IHDR",struct.pack(">IIBBBBB",n,n,8,2,0,0,0))+chunk(b"IDAT",zlib.compress(row*n,9))+chunk(b"IEND",b"")
-open(sys.argv[1],"wb").write(png)
-PY
-for s in 16 32 128 256 512; do
-  sips -z $s $s "$TMP/base.png" --out "$ICONSET/icon_${s}x${s}.png" >/dev/null
-  d=$((s*2)); sips -z $d $d "$TMP/base.png" --out "$ICONSET/icon_${s}x${s}@2x.png" >/dev/null
-done
+# App icon: Pixel Snob's ruler motif, built from the committed iconset.
+ICONSET="$ROOT/design/assets/icon/AppIcon.iconset"
+[ -d "$ICONSET" ] || { echo "missing $ICONSET" >&2; exit 1; }
 iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/AppIcon.icns"
-rm -rf "$TMP"
 
 codesign --force --deep -s - "$APP"
 ln -s /Applications "$STAGE/Applications"
